@@ -100,6 +100,8 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
 .editor .acoes .link.perigo{margin-left:auto}
 .cat-topo{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}
 .cat-topo .link{font-weight:500}
+.cat-topo h3{margin-bottom:.25rem}
+.link.fino{font-size:.75rem;font-weight:500;color:var(--suave)}
 .vol-ferr{display:flex;flex-wrap:wrap;gap:.25rem 1rem;margin:.25rem 0 .5rem}
 .aviso{min-height:1.25rem;margin:.5rem 0 0;font-size:.875rem;color:var(--folha)}
 </style>
@@ -358,9 +360,10 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     if (!c) { c = { id: novoId(), nome: nomeCat, itens: [] }; v.categorias.push(c); }
     return c;
   }
-  function aplicarV4(modelo) {
+  // Move itens entre volumes/categorias. Origens: categorias vazias saem; volume vazio some.
+  function aplicarMudancas(modelo, lista) {
     var origens = {};
-    MUDANCAS_V4.forEach(function (m) {
+    lista.forEach(function (m) {
       var v = modelo.volumes.filter(function (x) { return x.nome === m[0]; })[0];
       if (!v) return;
       origens[m[0]] = v;
@@ -380,9 +383,45 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       v.categorias = v.categorias.filter(function (c) { return c.itens.length; });
       if (!v.categorias.length) modelo.volumes.splice(modelo.volumes.indexOf(v), 1);
     });
-    return aplicarLista(modelo, ACRESCIMOS_V4);
+    return modelo;
   }
-  function modeloCompleto() { return aplicarV4(aplicarLista(aplicarV2(modeloPadrao()), ACRESCIMOS_V3)); }
+  function aplicarV4(modelo) { return aplicarLista(aplicarMudancas(modelo, MUDANCAS_V4), ACRESCIMOS_V4); }
+
+  // Organizadores dentro das malas (v5): zips e necessaires como grupos
+  var MUDANCAS_V5 = [
+    ['Mala — Guilherme', 'Cueca', 'Mala — Guilherme', 'Íntimas e meias (zip)'],
+    ['Mala — Guilherme', 'Meia', 'Mala — Guilherme', 'Íntimas e meias (zip)'],
+    ['Mala — Guilherme', 'Sunga', 'Mala — Guilherme', 'Praia (zip)'],
+    ['Mala — Guilherme', 'Luva', 'Mala — Guilherme', 'Frio (zip)'],
+    ['Mala — Guilherme', 'Cachecol', 'Mala — Guilherme', 'Frio (zip)'],
+    ['Mala — Guilherme', 'Touca', 'Mala — Guilherme', 'Frio (zip)'],
+    ['Mala — Guilherme', 'Cinto', 'Mala — Guilherme', 'Acessórios (necessaire)'],
+    ['Mala — Guilherme', 'Relógio', 'Mala — Guilherme', 'Acessórios (necessaire)'],
+    ['Mala — Guilherme', 'Case para relógio', 'Mala — Guilherme', 'Acessórios (necessaire)'],
+    ['Mala — Guilherme', 'Gravata', 'Mala — Guilherme', 'Acessórios (necessaire)'],
+    ['Mala — Camila', 'Roupa íntima', 'Mala — Camila', 'Íntimas e meias (zip)'],
+    ['Mala — Camila', 'Meia', 'Mala — Camila', 'Íntimas e meias (zip)'],
+    ['Mala — Camila', 'Biquíni/maiô', 'Mala — Camila', 'Praia (zip)'],
+    ['Mala — Camila', 'Saída de praia', 'Mala — Camila', 'Praia (zip)'],
+    ['Mala — Camila', 'Luva', 'Mala — Camila', 'Frio (zip)'],
+    ['Mala — Camila', 'Cachecol', 'Mala — Camila', 'Frio (zip)'],
+    ['Mala — Camila', 'Touca', 'Mala — Camila', 'Frio (zip)'],
+    ['Mala — Camila', 'Óculos de sol', 'Mala — Camila', 'Acessórios (necessaire)'],
+    ['Mala — Camila', 'Bijuterias', 'Mala — Camila', 'Acessórios (necessaire)'],
+    ['Mala — Camila', 'Bolsa', 'Mala — Camila', 'Bolsas'],
+    ['Mala — Aurora', 'Body MC', 'Mala — Aurora', 'Bodies e meias (zip)'],
+    ['Mala — Aurora', 'Body ML', 'Mala — Aurora', 'Bodies e meias (zip)'],
+    ['Mala — Aurora', 'Meia', 'Mala — Aurora', 'Bodies e meias (zip)'],
+    ['Mala — Aurora', 'Roupa de praia/piscina', 'Mala — Aurora', 'Praia (zip)'],
+    ['Mala — Aurora', 'Blusa UV', 'Mala — Aurora', 'Praia (zip)'],
+    ['Mala — Aurora', 'Laços', 'Mala — Aurora', 'Acessórios (necessaire)'],
+    ['Mala — Aurora', 'Presilha de cabelo', 'Mala — Aurora', 'Acessórios (necessaire)'],
+    ['Mala — Aurora', 'Pulseira', 'Mala — Aurora', 'Acessórios (necessaire)'],
+    ['Mala — Aurora', 'Óculos de sol', 'Mala — Aurora', 'Acessórios (necessaire)'],
+    ['Mala — Aurora', 'Manta', 'Bolsa da Aurora', 'À mão'],
+    ['Mala — Aurora', 'Fraldão', 'Bolsa da Aurora', 'À mão']
+  ];
+  function modeloCompleto() { return aplicarMudancas(aplicarV4(aplicarLista(aplicarV2(modeloPadrao()), ACRESCIMOS_V3)), MUDANCAS_V5); }
 
   // ═════ Estado (só neste aparelho) ═════
   // modelo: { volumes: [{ id, nome, tags[], categorias: [{ id, nome, itens: [{ id, nome, tags[], saida }] }] }] }
@@ -391,10 +430,11 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   var estado;
   try { estado = JSON.parse(localStorage.getItem(CHAVE)); } catch (e) {}
   if (!estado || typeof estado !== 'object') estado = {};
-  if (!estado.modelo) { estado.modelo = modeloCompleto(); estado.versao = 4; }
+  if (!estado.modelo) { estado.modelo = modeloCompleto(); estado.versao = 5; }
   if ((estado.versao || 1) < 2) { aplicarV2(estado.modelo); estado.versao = 2; }
   if (estado.versao < 3) { aplicarLista(estado.modelo, ACRESCIMOS_V3); estado.versao = 3; }
   if (estado.versao < 4) { aplicarV4(estado.modelo); estado.versao = 4; }
+  if (estado.versao < 5) { aplicarMudancas(estado.modelo, MUDANCAS_V5); estado.versao = 5; }
   estado.modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) { delete i.opcional; }); }); });
   // Uma vez só: itens que entraram como "Não vai" pela antiga regra de opcional voltam a "vai"
   if (!estado.semOpcional) {
@@ -521,7 +561,12 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         (completo ? 'Desmarcar todos' : 'Marcar todos') + '</button></div>' : '';
       alfa(v.categorias).forEach(function (c) {
         var its = alfa(c.itens.filter(function (i) { return !i.saida && visivel(i); }));
-        if (its.length) corpo += '<h3>' + esc(c.nome) + '</h3><ul class="itens">' + its.map(function (i) { return linhaItem(i); }).join('') + '</ul>';
+        if (!its.length) return;
+        var vaoCat = c.itens.filter(function (i) { return !i.saida && !i.fora; });
+        var catOk = vaoCat.length && vaoCat.every(function (i) { return i.ok; });
+        corpo += '<div class="cat-topo"><h3>' + esc(c.nome) + '</h3>' +
+          (vaoCat.length > 1 ? '<button type="button" class="link fino" data-acao="marcar-cat" data-id="' + c.id + '">' + (catOk ? 'Desmarcar' : 'Marcar todos') + '</button>' : '') +
+          '</div><ul class="itens">' + its.map(function (i) { return linhaItem(i); }).join('') + '</ul>';
       });
       corpo += '<form class="novo" data-form="extra" data-vol="' + v.id + '"><input placeholder="Item só nesta viagem" aria-label="Novo item em ' + esc(v.nome) + '" autocomplete="off"><button class="botao">Adicionar</button></form>';
       var p = cv.total ? Math.round(cv.ok / cv.total * 100) : 0;
@@ -565,11 +610,21 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         }).join('') + '</div></div>';
     }).join('');
   }
+  // Lista volume › categoria, com a atual selecionada
+  function seletorCategoria(itemId) {
+    var atual = acharItemModelo(itemId).cat.id;
+    return '<select class="campo" data-campo="destino">' + alfa(estado.modelo.volumes).map(function (v) {
+      return '<optgroup label="' + esc(v.nome) + '">' + alfa(v.categorias).map(function (c) {
+        return '<option value="' + c.id + '"' + (c.id === atual ? ' selected' : '') + '>' + esc(c.nome) + '</option>';
+      }).join('') + '</optgroup>';
+    }).join('') + '</select>';
+  }
   function editorItem(i) {
     return '<li class="editor" data-editor="' + i.id + '">' +
       '<span class="rot">Nome</span><input class="campo" data-campo="nome" value="' + esc(i.nome) + '" autocomplete="off">' +
       '<span class="rot">Só em viagens com (vazio = sempre)</span>' + chipsTags(i.tags, 'tag-item', i.id) +
       '<span class="rot">Última hora</span><div class="chips"><button type="button" class="chip" data-acao="saida-item" data-id="' + i.id + '" aria-pressed="' + !!i.saida + '">Vai em "Na saída"</button></div>' +
+      '<span class="rot">Mover para</span>' + seletorCategoria(i.id) +
       '<div class="acoes"><button type="button" class="botao cheio" data-acao="salvar-item" data-id="' + i.id + '">Pronto</button>' +
       '<button type="button" class="link perigo" data-acao="excluir-item" data-id="' + i.id + '">' + (ui.confirmar === 'item:' + i.id ? 'Confirmar exclusão?' : 'Excluir item') + '</button></div></li>';
   }
@@ -642,6 +697,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     if (!b) return;
     var acao = b.dataset.acao, id = b.dataset.id;
     var manterConfirmar = false;
+    ui.aviso = '';
     // Antes de re-renderizar um editor aberto, guarda o nome que está sendo digitado
     if (/^(tag-item|saida-item)$/.test(acao)) { var dig = lerNome(id); if (dig) acharItemModelo(id).item.nome = dig; }
     if (acao === 'tag-vol') { var dv = lerNome(id); if (dv) acharVol(id).nome = dv; }
@@ -659,6 +715,12 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       case 'marcar':
         var a = acharItemViagem(id); if (a) { a.item.ok = !a.item.ok; salvar(); }
         break;
+      case 'marcar-cat':
+        var mc = null;
+        estado.viagem.volumes.forEach(function (v) { v.categorias.forEach(function (c) { if (c.id === id) mc = c; }); });
+        var vc = mc.itens.filter(function (i) { return !i.saida && !i.fora; });
+        var cOk = vc.every(function (i) { return i.ok; });
+        vc.forEach(function (i) { i.ok = !cOk; }); salvar(); break;
       case 'marcar-vol':
       // Marca (ou desmarca, se já está completo) os itens do volume que vão, fora "Na saída"
         var mv = estado.viagem.volumes.filter(function (x) { return x.id === id; })[0], its = [];
@@ -689,7 +751,16 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       case 'saida-item':
         var si = acharItemModelo(id).item; si.saida = !si.saida; salvar(); manterConfirmar = true; break;
       case 'salvar-item':
-        var ei = acharItemModelo(id).item, nn = lerNome(id); if (nn) ei.nome = nn; salvar(); ui.editando = null; break;
+        var ach = acharItemModelo(id), nn = lerNome(id); if (nn) ach.item.nome = nn;
+        var sel = document.querySelector('[data-editor="' + id + '"] [data-campo=destino]');
+        if (sel && sel.value !== ach.cat.id) {
+          var dest = acharCat(sel.value);
+          ach.cat.itens.splice(ach.cat.itens.indexOf(ach.item), 1);
+          dest.cat.itens.push(ach.item);
+          estado.abertos['m:' + dest.vol.id] = 1;
+          ui.aviso = '"' + ach.item.nome + '" foi para ' + dest.vol.nome + ' › ' + dest.cat.nome + '.';
+        }
+        salvar(); ui.editando = null; break;
       case 'salvar-vol':
         var nv = lerNome(id); if (nv) acharVol(id).nome = nv; salvar(); ui.editando = null; break;
       case 'salvar-cat':
