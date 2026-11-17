@@ -64,6 +64,15 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
 .duas{display:grid;grid-template-columns:1fr 1fr;gap:.375rem}
 .duas .botao{min-height:2.75rem;font-size:.9375rem}
 .botao:disabled{opacity:.4;cursor:default}
+.extra{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.5rem 0;border-top:1px solid var(--linha)}
+.card-topo + .extra{border-top:0}
+.extra .info b{display:block;font-weight:600}
+.extra .info span{color:var(--suave);font-size:.8125rem}
+.passo{display:flex;align-items:center;gap:.5rem;flex:none}
+.passo button{width:2.5rem;height:2.5rem;border-radius:.5rem;border:1px solid var(--linha);background:var(--fundo);font-size:1.25rem;line-height:1;font-weight:600}
+.passo button.mais{background:var(--folha);border-color:var(--folha);color:var(--folha-tinta)}
+.passo button:disabled{opacity:.35;cursor:default}
+.passo output{min-width:1.5rem;text-align:center;font-weight:700;font-size:1.125rem}
 .aviso{min-height:1.375rem;margin:.625rem 0 0;font-size:.875rem;color:var(--folha)}
 
 </style>
@@ -92,6 +101,7 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
       <button type="button" class="seta" id="sem-prox" aria-label="Próxima semana">&rsaquo;</button>
     </div>
     <div id="cards"></div>
+    <div class="card" id="card-extras"></div>
     <div class="resumo" id="resumo-semana"></div>
   </section>
 
@@ -99,7 +109,7 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
   <section class="tela" id="tela-reposicoes" hidden>
     <div id="cards-rep"></div>
     <p class="aviso" id="aviso-rep" role="status"></p>
-    <p class="dica">"Abater" desconta a reposição mais antiga daquele tipo e conta como feita hoje.</p>
+    <p class="dica">Para abater, registre a aula extra na aba Semana: ela desconta a reposição mais antiga do tipo.</p>
   </section>
 
 </div>
@@ -234,17 +244,51 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
       cards.appendChild(div);
     });
 
+    // Aulas extras: cada uma abate a reposição pendente mais antiga do tipo
+    var ce = $('card-extras');
+    ce.innerHTML = '<div class="card-topo" style="margin-bottom:.25rem"><h2>Aulas extras (reposição)</h2></div>';
+    TIPOS.forEach(function (t) {
+      var nExtra = extrasDaSemana(seg, t.id).length, nPend = pendentesDe(t.id).length;
+      var linha = document.createElement('div');
+      linha.className = 'extra';
+      linha.innerHTML =
+        '<div class="info"><b>' + t.nome + '</b><span>' + (nPend ? nPend + ' a repor' : 'Nada a repor') + '</span></div>' +
+        '<div class="passo">' +
+          '<button type="button" data-acao="menos" aria-label="Desfazer aula extra ' + t.nome.toLowerCase() + '"' + (nExtra ? '' : ' disabled') + '>&minus;</button>' +
+          '<output aria-label="Aulas extras ' + t.nome.toLowerCase() + ' nesta semana">' + nExtra + '</output>' +
+          '<button type="button" class="mais" data-acao="mais" aria-label="Registrar aula extra ' + t.nome.toLowerCase() + '"' + (nPend ? '' : ' disabled') + '>+</button>' +
+        '</div>';
+      linha.querySelector('[data-acao=mais]').addEventListener('click', function () {
+        var r = pendentesDe(t.id)[0]; if (!r) return;
+        r.feita = dataNaSemana(seg); salvar(); renderSemana();
+      });
+      linha.querySelector('[data-acao=menos]').addEventListener('click', function () {
+        var ex = extrasDaSemana(seg, t.id); if (!ex.length) return;
+        ex[ex.length - 1].feita = null; salvar(); renderSemana();
+      });
+      ce.appendChild(linha);
+    });
+
     var feitas = TIPOS.filter(function (t) { return sem[t.id] === 'feita'; }).length;
     var repostas = estado.reposicoes.filter(function (r) { return r.feita && naSemana(r.feita, seg); }).length;
     $('resumo-semana').innerHTML =
       kpi(feitas + ' de ' + TIPOS.length, 'aulas realizadas') +
-      kpi(repostas, repostas === 1 ? 'reposição feita' : 'reposições feitas') +
+      kpi(repostas, repostas === 1 ? 'aula extra' : 'aulas extras') +
       kpi(feitas + repostas, 'total na semana');
+  }
+  // Reposições abatidas dentro da semana, da mais antiga para a mais recente
+  function extrasDaSemana(seg, tipo) {
+    return estado.reposicoes.filter(function (r) { return r.tipo === tipo && r.feita && naSemana(r.feita, seg); })
+      .sort(function (a, b) { return a.feita < b.feita ? -1 : 1; });
+  }
+  // Data da aula extra: hoje, se hoje cai na semana; senão o domingo da semana (semanas passadas)
+  function dataNaSemana(seg) {
+    var h = hoje();
+    return naSemana(h, seg) ? h : somaDias(seg, 6);
   }
   function kpi(v, r) { return '<div class="kpi"><b>' + v + '</b><span>' + r + '</span></div>'; }
 
-  // ── Reposições ──
-  // ── Reposições: saldo por tipo; "+" registra, "−" abate a mais antiga ──
+  // ── Reposições: saldo por tipo; "+" registra (o abatimento é feito na Semana) ──
   function renderReposicoes() {
     var box = $('cards-rep'); box.innerHTML = '';
     TIPOS.forEach(function (t) {
@@ -254,19 +298,10 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
       div.innerHTML =
         '<h2>' + t.nome + '</h2>' +
         '<div class="saldo"><b>' + n + '</b><span>' + (n === 1 ? 'aula a repor' : 'aulas a repor') + '</span></div>' +
-        '<div class="duas">' +
-          '<button type="button" class="botao" data-acao="mais">+ Registrar</button>' +
-          '<button type="button" class="botao cheio" data-acao="menos"' + (n ? '' : ' disabled') + '>&minus; Abater</button>' +
-        '</div>';
+        '<button type="button" class="botao" data-acao="mais" style="width:100%;min-height:2.75rem">+ Registrar reposição</button>';
       div.querySelector('[data-acao=mais]').addEventListener('click', function () {
         estado.reposicoes.push({ id: novoId(), tipo: t.id, origem: 'manual', criada: hoje(), feita: null });
         salvar(); $('aviso-rep').textContent = 'Reposição ' + t.nome.toLowerCase() + ' registrada.'; render();
-      });
-      div.querySelector('[data-acao=menos]').addEventListener('click', function () {
-        var r = pendentesDe(t.id)[0];
-        if (!r) return;
-        r.feita = hoje();
-        salvar(); $('aviso-rep').textContent = 'Reposição ' + t.nome.toLowerCase() + ' abatida.'; render();
       });
       box.appendChild(div);
     });
