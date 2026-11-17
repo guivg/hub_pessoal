@@ -248,6 +248,9 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   function hoje() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   var MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   function dataCurta(iso) { var p = (iso || hoje()).split('-'); return (+p[2]) + ' ' + MESES[+p[1] - 1]; }
+  // Ordem alfabética (pt-BR, ignora acentos e maiúsculas) — só na exibição
+  function compara(a, b) { return a.localeCompare(b, 'pt-BR', { sensitivity: 'base', numeric: true }); }
+  function alfa(lista) { return lista.slice().sort(function (a, b) { return compara(a.nome, b.nome); }); }
   function aplica(tagsItem, tagsViagem) {
     return !tagsItem || !tagsItem.length || tagsItem.some(function (t) { return tagsViagem.indexOf(t) > -1; });
   }
@@ -282,7 +285,34 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     }); }); });
     return modelo;
   }
-  function modeloCompleto() { return aplicarV2(modeloPadrao()); }
+  // Acréscimos (v3): farmacinha dos adultos — itens de conferência, sem doses
+  var ACRESCIMOS_V3 = [
+    ['Farmacinha — adultos', 'Uso contínuo', 'Medicamentos de uso contínuo'],
+    ['Farmacinha — adultos', 'Uso contínuo', 'Receitas médicas'],
+    ['Farmacinha — adultos', 'Se precisar', 'Analgésico/antitérmico'],
+    ['Farmacinha — adultos', 'Se precisar', 'Anti-inflamatório'],
+    ['Farmacinha — adultos', 'Se precisar', 'Antialérgico'],
+    ['Farmacinha — adultos', 'Se precisar', 'Antiácido'],
+    ['Farmacinha — adultos', 'Se precisar', 'Remédio para enjoo'],
+    ['Farmacinha — adultos', 'Se precisar', 'Remédio para diarreia'],
+    ['Farmacinha — adultos', 'Se precisar', 'Antigripal'],
+    ['Farmacinha — adultos', 'Se precisar', 'Colírio'],
+    ['Farmacinha — adultos', 'Primeiros socorros', 'Curativos adesivos'],
+    ['Farmacinha — adultos', 'Primeiros socorros', 'Pomada para picada de inseto'],
+    ['Farmacinha — adultos', 'Primeiros socorros', 'Repelente']
+  ];
+  function aplicarLista(modelo, lista) {
+    lista.forEach(function (a) {
+      var item = lerItem(a[2]);
+      var v = modelo.volumes.filter(function (x) { return x.nome === a[0]; })[0];
+      if (!v) { v = { id: novoId(), nome: a[0], tags: [], categorias: [] }; modelo.volumes.push(v); }
+      var c = v.categorias.filter(function (x) { return x.nome === a[1]; })[0];
+      if (!c) { c = { id: novoId(), nome: a[1], itens: [] }; v.categorias.push(c); }
+      if (!c.itens.some(function (i) { return i.nome.toLowerCase() === item.nome.toLowerCase(); })) c.itens.push(item);
+    });
+    return modelo;
+  }
+  function modeloCompleto() { return aplicarLista(aplicarV2(modeloPadrao()), ACRESCIMOS_V3); }
 
   // ═════ Estado (só neste aparelho) ═════
   // modelo: { volumes: [{ id, nome, tags[], categorias: [{ id, nome, itens: [{ id, nome, tags[], saida }] }] }] }
@@ -291,8 +321,9 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   var estado;
   try { estado = JSON.parse(localStorage.getItem(CHAVE)); } catch (e) {}
   if (!estado || typeof estado !== 'object') estado = {};
-  if (!estado.modelo) { estado.modelo = modeloCompleto(); estado.versao = 2; }
+  if (!estado.modelo) { estado.modelo = modeloCompleto(); estado.versao = 3; }
   if ((estado.versao || 1) < 2) { aplicarV2(estado.modelo); estado.versao = 2; }
+  if (estado.versao < 3) { aplicarLista(estado.modelo, ACRESCIMOS_V3); estado.versao = 3; }
   estado.modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) { delete i.opcional; }); }); });
   // Uma vez só: itens que entraram como "Não vai" pela antiga regra de opcional voltam a "vai"
   if (!estado.semOpcional) {
@@ -398,7 +429,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     // Na saída: itens de última hora, de todos os volumes
     if (saida.length) {
       var cs = contar(saida.map(function (x) { return x.i; }));
-      var vis = saida.filter(function (x) { return visivel(x.i); });
+      var vis = saida.filter(function (x) { return visivel(x.i); }).sort(function (a, b) { return compara(a.i.nome, b.i.nome); });
       if (vis.length || !ui.soFalta) {
         h += '<div class="vol saida card" style="padding:.75rem 1rem;margin-bottom:.5rem">' +
           '<div class="vol-topo"><span class="vol-nome">Na saída</span><span class="vol-conta' + (cs.ok === cs.total ? ' completo' : '') + '">' + cs.ok + '/' + cs.total + '</span></div>' +
@@ -408,7 +439,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       }
     }
 
-    vg.volumes.forEach(function (v) {
+    alfa(vg.volumes).forEach(function (v) {
       var itensVol = [];
       v.categorias.forEach(function (c) { c.itens.forEach(function (i) { if (!i.saida) itensVol.push(i); }); });
       var cv = contar(itensVol);
@@ -417,10 +448,8 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       if (ui.soFalta && completo) return;
       var corpo = cv.total ? '<div class="vol-ferr"><button type="button" class="link" data-acao="marcar-vol" data-id="' + v.id + '">' +
         (completo ? 'Desmarcar todos' : 'Marcar todos') + '</button></div>' : '';
-      v.categorias.forEach(function (c) {
-        var its = c.itens.filter(function (i) { return !i.saida && visivel(i); });
-        // não-vão por último
-        its.sort(function (a, b) { return (a.fora ? 1 : 0) - (b.fora ? 1 : 0); });
+      alfa(v.categorias).forEach(function (c) {
+        var its = alfa(c.itens.filter(function (i) { return !i.saida && visivel(i); }));
         if (its.length) corpo += '<h3>' + esc(c.nome) + '</h3><ul class="itens">' + its.map(function (i) { return linhaItem(i); }).join('') + '</ul>';
       });
       corpo += '<form class="novo" data-form="extra" data-vol="' + v.id + '"><input placeholder="Item só nesta viagem" aria-label="Novo item em ' + esc(v.nome) + '" autocomplete="off"><button class="botao">Adicionar</button></form>';
@@ -484,7 +513,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   function renderModelo() {
     var el = $('tela-modelo');
     var h = '<p class="dica" style="margin-bottom:1rem">Base de toda viagem nova. Toque num item para editar nome, etiquetas e "Na saída". Mudanças aqui valem a partir da próxima viagem criada.</p>';
-    estado.modelo.volumes.forEach(function (v) {
+    alfa(estado.modelo.volumes).forEach(function (v) {
       var n = 0; v.categorias.forEach(function (c) { n += c.itens.length; });
       var corpo = '';
       if (ui.editando === 'vol:' + v.id) {
@@ -493,10 +522,10 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         corpo += '<div class="vol-ferr"><button type="button" class="link" data-acao="editar" data-id="vol:' + v.id + '">Editar volume</button>' +
           '<button type="button" class="link" data-acao="nova-cat" data-id="' + v.id + '">+ Categoria</button></div>';
       }
-      v.categorias.forEach(function (c) {
+      alfa(v.categorias).forEach(function (c) {
         if (ui.editando === 'cat:' + c.id) corpo += editorNome('cat', c.id, c.nome);
         else corpo += '<div class="cat-topo"><h3>' + esc(c.nome) + '</h3><button type="button" class="link" data-acao="editar" data-id="cat:' + c.id + '">Renomear</button></div>';
-        corpo += '<ul class="itens">' + c.itens.map(function (i) {
+        corpo += '<ul class="itens">' + alfa(c.itens).map(function (i) {
           if (ui.editando === 'item:' + i.id) return editorItem(i);
           return '<li class="m-item"><button type="button" data-acao="editar" data-id="item:' + i.id + '">' + esc(i.nome) +
             (i.saida ? '<span class="etq saida">Na saída</span>' : '') +
