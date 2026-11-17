@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Aulas de Tênis</title>
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Tênis">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F4F4F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../compartilhado/tema.css">
+<style>
+.tela[hidden]{display:none}
+h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
+.dica{color:var(--suave);font-size:.8125rem;margin:0}
+.vazio{color:var(--suave);margin:.25rem 0 0}
+
+/* navegação de semana */
+.semana-nav{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
+.semana-nav .rotulo{text-align:center}
+.semana-nav .rotulo strong{display:block;font-size:1.0625rem}
+.semana-nav .rotulo span{color:var(--suave);font-size:.8125rem}
+.seta{border:1px solid var(--linha);background:var(--papel);width:2.5rem;height:2.5rem;border-radius:.5rem;font-size:1.125rem;line-height:1;flex:none}
+.seta:disabled{opacity:.35;cursor:default}
+
+/* card de aula */
+.card{background:var(--papel);border:1px solid var(--linha);border-radius:.75rem;padding:.875rem 1rem;margin-bottom:.625rem}
+.card-topo{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:.625rem}
+.estado{font-size:.8125rem;font-weight:600;color:var(--suave)}
+.estado.feita{color:var(--positivo)}
+.estado.falta{color:var(--alerta)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:.375rem}
+.seg button{
+  border:1px solid var(--linha);background:var(--fundo);border-radius:.5rem;
+  padding:.5rem .25rem;font-size:.875rem;font-weight:500;min-height:2.5rem;
+}
+.seg button[aria-pressed="true"]{background:var(--folha);border-color:var(--folha);color:var(--folha-tinta);font-weight:600}
+.nota{color:var(--suave);font-size:.8125rem;margin:.5rem 0 0}
+
+.resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1.25rem 0 0}
+.kpi{background:var(--papel);border:1px solid var(--linha);border-radius:.75rem;padding:.625rem .5rem;text-align:center}
+.kpi b{display:block;font-size:1.25rem;line-height:1.2}
+.kpi span{color:var(--suave);font-size:.75rem}
+
+.faixa{display:flex;align-items:center;justify-content:space-between;gap:.75rem;background:var(--folha-clara);border-radius:.75rem;padding:.625rem .875rem;margin-bottom:1rem;font-size:.875rem}
+.faixa[hidden]{display:none}
+
+/* botões */
+.botao{border:1px solid var(--linha);background:var(--papel);padding:.5rem 1rem;border-radius:.5rem;font-weight:600;font-size:.875rem}
+.botao.cheio{background:var(--folha);border-color:var(--folha);color:var(--folha-tinta)}
+.link{border:0;background:none;padding:0;color:var(--folha);font-weight:600;font-size:.875rem;text-decoration:underline;text-underline-offset:3px}
+.acao{border:0;background:none;font-size:.8125rem;font-weight:500;padding:.375rem .5rem;border-radius:.375rem;color:var(--folha)}
+.acao.neutra{color:var(--suave)}
+.acao.perigo{color:var(--perigo)}
+
+/* reposições */
+.grupo{margin-top:1.75rem}
+.grupo-topo{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:.5rem}
+.conta{color:var(--suave);font-size:.8125rem;white-space:nowrap}
+.lista{list-style:none;margin:0;padding:0;border-top:1px solid var(--linha)}
+.lista li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.375rem .75rem;padding:.625rem 0;border-bottom:1px solid var(--linha)}
+.lista .info{min-width:0;flex:1 1 13rem}
+.lista .titulo{font-weight:600}
+.lista .sub{display:block;color:var(--suave);font-size:.8125rem;overflow-wrap:anywhere}
+.lista .botoes{display:flex;align-items:center;gap:.25rem;flex:none;margin-left:auto}
+.data-feita{background:var(--papel);border:1px solid var(--linha);border-radius:.375rem;padding:.25rem .375rem;font-size:.875rem}
+
+/* formulário */
+.form{background:var(--papel);border:1px solid var(--linha);border-radius:.75rem;padding:1rem;margin-top:1rem}
+.form[hidden]{display:none}
+.form label{display:block;font-weight:600;font-size:.8125rem;color:var(--suave);margin:.75rem 0 .375rem}
+.form label:first-child{margin-top:0}
+.form label.check{display:flex;align-items:center;gap:.5rem;color:var(--tinta);font-weight:500;font-size:.875rem}
+.form input[type=date],.form input[type=text]{width:100%;background:var(--fundo);border:1px solid var(--linha);border-radius:.5rem;padding:.4375rem .75rem}
+.chips{display:flex;gap:.375rem}
+.chip{border:1px solid var(--linha);background:var(--fundo);padding:.375rem .875rem;border-radius:999px;font-size:.875rem}
+.chip[aria-pressed="true"]{background:var(--folha);border-color:var(--folha);color:var(--folha-tinta);font-weight:500}
+.form .acoes{display:flex;gap:.5rem;margin-top:1rem}
+.aviso{min-height:1.375rem;margin:.625rem 0 0;font-size:.875rem;color:var(--folha)}
+
+/* histórico */
+.tabela{width:100%;border-collapse:collapse;font-size:.875rem}
+.tabela th{text-align:left;font-weight:600;font-size:.75rem;color:var(--suave);padding:.375rem .25rem;border-bottom:1px solid var(--linha)}
+.tabela td{padding:.5rem .25rem;border-bottom:1px solid var(--linha);vertical-align:top}
+.tabela td.c,.tabela th.c{text-align:center}
+.marca{font-weight:600}
+.marca.feita{color:var(--positivo)}
+.marca.falta{color:var(--alerta)}
+.marca.pend{color:var(--suave)}
+.mes{display:flex;align-items:baseline;justify-content:space-between;margin:1.5rem 0 .5rem}
+.mes:first-child{margin-top:0}
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header class="topo">
+    <h1><svg viewBox="12 12 76 76" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="50" cy="50" r="20" fill="currentColor" opacity=".35"/><path d="M35 37 A18 18 0 0 1 35 63 M65 37 A18 18 0 0 0 65 63" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>Aulas de Tênis</h1>
+    <a class="voltar" href="../../">&larr; Hub</a>
+  </header>
+
+  <nav class="nav" aria-label="Seções">
+    <button type="button" data-tela="semana" aria-current="page">Semana</button>
+    <button type="button" data-tela="reposicoes">Reposições</button>
+    <button type="button" data-tela="historico">Histórico</button>
+  </nav>
+
+  <!-- ══ Semana ══ -->
+  <section class="tela" id="tela-semana">
+    <div class="faixa" id="faixa-pend" hidden>
+      <span id="faixa-texto"></span>
+      <button type="button" class="link" data-ir="reposicoes">Ver</button>
+    </div>
+    <div class="semana-nav">
+      <button type="button" class="seta" id="sem-ant" aria-label="Semana anterior">&lsaquo;</button>
+      <div class="rotulo"><strong id="sem-rotulo"></strong><span id="sem-sub"></span></div>
+      <button type="button" class="seta" id="sem-prox" aria-label="Próxima semana">&rsaquo;</button>
+    </div>
+    <div id="cards"></div>
+    <div class="resumo" id="resumo-semana"></div>
+  </section>
+
+  <!-- ══ Reposições ══ -->
+  <section class="tela" id="tela-reposicoes" hidden>
+    <div class="resumo" id="resumo-rep" style="margin-top:0"></div>
+
+    <div style="margin-top:1rem">
+      <button type="button" class="botao" id="abrir-form">+ Registrar reposição</button>
+    </div>
+    <form class="form" id="form-rep" hidden>
+      <label>Tipo</label>
+      <div class="chips" id="form-tipo">
+        <button type="button" class="chip" data-tipo="individual" aria-pressed="true">Individual</button>
+        <button type="button" class="chip" data-tipo="dupla" aria-pressed="false">Dupla</button>
+      </div>
+      <label for="form-ref">Aula que ficou para repor (data)</label>
+      <input type="date" id="form-ref" required>
+      <label for="form-obs">Observação (opcional)</label>
+      <input type="text" id="form-obs" placeholder="Ex.: chuva, professor desmarcou" autocomplete="off">
+      <label class="check"><input type="checkbox" id="form-feita"> Já foi reposta</label>
+      <div id="form-feita-data" hidden>
+        <input type="date" id="form-data-feita">
+      </div>
+      <div class="acoes">
+        <button type="submit" class="botao cheio">Salvar</button>
+        <button type="button" class="botao" id="cancelar-form">Cancelar</button>
+      </div>
+    </form>
+    <p class="aviso" id="aviso-rep" role="status"></p>
+
+    <div class="grupo">
+      <div class="grupo-topo"><h2>Pendentes</h2><span class="conta" id="conta-pend"></span></div>
+      <ul class="lista" id="lista-pend"></ul>
+    </div>
+    <div class="grupo">
+      <div class="grupo-topo"><h2>Já repostas</h2><span class="conta" id="conta-feitas"></span></div>
+      <ul class="lista" id="lista-feitas"></ul>
+    </div>
+  </section>
+
+  <!-- ══ Histórico ══ -->
+  <section class="tela" id="tela-historico" hidden>
+    <div id="historico"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  // ── Configuração ──
+  var TIPOS = [
+    { id: 'individual', nome: 'Individual' },
+    { id: 'dupla', nome: 'Dupla' }
+  ];
+  var NOME = { individual: 'Individual', dupla: 'Dupla' };
+  var MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var MESES_LONGOS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  // ── Persistência (só neste aparelho) ──
+  // semanas: { "AAAA-MM-DD" (segunda-feira): { individual: "feita"|"falta", dupla: ... } }
+  // reposicoes: [{ id, tipo, ref: "AAAA-MM-DD", origem: "falta"|"manual", semana?, obs, feita: "AAAA-MM-DD"|null }]
+  var CHAVE = 'aulas-tenis:v1';
+  var estado;
+  try { estado = JSON.parse(localStorage.getItem(CHAVE)); } catch (e) {}
+  if (!estado || typeof estado !== 'object') estado = {};
+  estado.semanas = estado.semanas || {};
+  estado.reposicoes = estado.reposicoes || [];
+  function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
+
+  // ── Datas (locais, como "AAAA-MM-DD") ──
+  function dois(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(d) { return d.getFullYear() + '-' + dois(d.getMonth() + 1) + '-' + dois(d.getDate()); }
+  function deIso(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function hoje() { return iso(new Date()); }
+  function segunda(s) { var d = deIso(s); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return iso(d); }
+  function somaDias(s, n) { var d = deIso(s); d.setDate(d.getDate() + n); return iso(d); }
+  function curta(s) { var d = deIso(s); return d.getDate() + ' ' + MESES[d.getMonth()]; }
+  function rotuloSemana(seg) {
+    var a = deIso(seg), b = deIso(somaDias(seg, 6));
+    return a.getMonth() === b.getMonth()
+      ? a.getDate() + ' a ' + b.getDate() + ' ' + MESES[b.getMonth()]
+      : curta(seg) + ' a ' + curta(somaDias(seg, 6));
+  }
+  function relativa(seg) {
+    var dif = Math.round((deIso(seg) - deIso(segunda(hoje()))) / 6048e5);
+    return dif === 0 ? 'Esta semana' : dif === -1 ? 'Semana passada' : dif === 1 ? 'Próxima semana'
+      : dif < 0 ? 'Há ' + (-dif) + ' semanas' : 'Daqui a ' + dif + ' semanas';
+  }
+  function naSemana(data, seg) { return data >= seg && data <= somaDias(seg, 6); }
+
+  // ── Utilidades ──
+  function $(id) { return document.getElementById(id); }
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
+  function novoId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function pendentes() { return estado.reposicoes.filter(function (r) { return !r.feita; }); }
+  function repDaFalta(seg, tipo) {
+    return estado.reposicoes.find(function (r) { return r.origem === 'falta' && r.semana === seg && r.tipo === tipo; });
+  }
+
+  // ── Navegação ──
+  var semanaAtual = segunda(hoje());
+  function abrirTela(nome) {
+    document.querySelectorAll('.nav button').forEach(function (b) {
+      if (b.dataset.tela === nome) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('.tela').forEach(function (t) { t.hidden = t.id !== 'tela-' + nome; });
+    render();
+  }
+  document.querySelectorAll('.nav button').forEach(function (b) {
+    b.addEventListener('click', function () { abrirTela(b.dataset.tela); });
+  });
+  document.querySelectorAll('[data-ir]').forEach(function (b) {
+    b.addEventListener('click', function () { abrirTela(b.dataset.ir); });
+  });
+  $('sem-ant').addEventListener('click', function () { semanaAtual = somaDias(semanaAtual, -7); renderSemana(); });
+  $('sem-prox').addEventListener('click', function () { semanaAtual = somaDias(semanaAtual, 7); renderSemana(); });
+
+  // ── Semana ──
+  function definirStatus(seg, tipo, novo) {
+    var sem = estado.semanas[seg] || (estado.semanas[seg] = {});
+    var atual = sem[tipo] || null;
+    if (atual === novo) return;
+    var rep = repDaFalta(seg, tipo);
+    if (atual === 'falta' && rep) {
+      if (rep.feita) { notaCard[tipo] = 'A reposição desta aula já foi feita. Desfaça-a em Reposições antes de mudar.'; renderSemana(); return; }
+      estado.reposicoes.splice(estado.reposicoes.indexOf(rep), 1);
+    }
+    if (novo) sem[tipo] = novo; else delete sem[tipo];
+    if (!Object.keys(sem).length) delete estado.semanas[seg];
+    if (novo === 'falta' && !repDaFalta(seg, tipo)) {
+      estado.reposicoes.push({ id: novoId(), tipo: tipo, ref: seg, semana: seg, origem: 'falta', obs: '', feita: null });
+    }
+    salvar(); renderSemana();
+  }
+  var notaCard = {};
+
+  function renderSemana() {
+    var seg = semanaAtual, sem = estado.semanas[seg] || {};
+    $('sem-rotulo').textContent = rotuloSemana(seg);
+    $('sem-sub').textContent = relativa(seg);
+    $('sem-prox').disabled = seg >= segunda(hoje());
+
+    var p = pendentes().length;
+    $('faixa-pend').hidden = !p;
+    $('faixa-texto').textContent = p + (p === 1 ? ' reposição pendente' : ' reposições pendentes');
+
+    var cards = $('cards'); cards.innerHTML = '';
+    TIPOS.forEach(function (t) {
+      var st = sem[t.id] || null;
+      var rep = repDaFalta(seg, t.id);
+      var txtEstado = st === 'feita' ? 'Realizada' : st === 'falta' ? (rep && rep.feita ? 'Reposta em ' + curta(rep.feita) : 'A repor') : 'Pendente';
+      var div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML =
+        '<div class="card-topo"><h2>Aula ' + t.nome.toLowerCase() + '</h2>' +
+        '<span class="estado ' + (st || '') + '">' + txtEstado + '</span></div>' +
+        '<div class="seg" role="group" aria-label="Situação da aula ' + t.nome.toLowerCase() + '">' +
+          '<button type="button" data-v="">Pendente</button>' +
+          '<button type="button" data-v="feita">Realizada</button>' +
+          '<button type="button" data-v="falta">Não teve</button>' +
+        '</div>' +
+        (notaCard[t.id] ? '<p class="nota">' + esc(notaCard[t.id]) + '</p>'
+          : st === 'falta' && rep && !rep.feita ? '<p class="nota">Foi para a lista de reposições.</p>' : '');
+      div.querySelectorAll('.seg button').forEach(function (b) {
+        b.setAttribute('aria-pressed', String((b.dataset.v || null) === st));
+        b.addEventListener('click', function () { notaCard = {}; definirStatus(seg, t.id, b.dataset.v || null); });
+      });
+      cards.appendChild(div);
+    });
+    notaCard = {};
+
+    var feitas = TIPOS.filter(function (t) { return sem[t.id] === 'feita'; }).length;
+    var repostas = estado.reposicoes.filter(function (r) { return r.feita && naSemana(r.feita, seg); }).length;
+    $('resumo-semana').innerHTML =
+      kpi(feitas + ' de ' + TIPOS.length, 'aulas realizadas') +
+      kpi(repostas, repostas === 1 ? 'reposição feita' : 'reposições feitas') +
+      kpi(feitas + repostas, 'total na semana');
+  }
+  function kpi(v, r) { return '<div class="kpi"><b>' + v + '</b><span>' + r + '</span></div>'; }
+
+  // ── Reposições ──
+  var tipoForm = 'individual';
+  $('abrir-form').addEventListener('click', function () {
+    $('form-rep').hidden = false; $('abrir-form').hidden = true;
+    $('form-ref').value = hoje(); $('form-obs').value = '';
+    $('form-feita').checked = false; $('form-feita-data').hidden = true; $('form-data-feita').value = hoje();
+    $('aviso-rep').textContent = '';
+  });
+  function fecharForm() { $('form-rep').hidden = true; $('abrir-form').hidden = false; }
+  $('cancelar-form').addEventListener('click', fecharForm);
+  $('form-tipo').querySelectorAll('.chip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      tipoForm = c.dataset.tipo;
+      $('form-tipo').querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', String(x === c)); });
+    });
+  });
+  $('form-feita').addEventListener('change', function () { $('form-feita-data').hidden = !this.checked; });
+  $('form-rep').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var ref = $('form-ref').value;
+    if (!ref) { $('aviso-rep').textContent = 'Informe a data da aula a repor.'; return; }
+    var feita = $('form-feita').checked ? ($('form-data-feita').value || hoje()) : null;
+    estado.reposicoes.push({ id: novoId(), tipo: tipoForm, ref: ref, origem: 'manual', obs: $('form-obs').value.trim(), feita: feita });
+    salvar(); fecharForm();
+    $('aviso-rep').textContent = 'Reposição ' + NOME[tipoForm].toLowerCase() + ' registrada.';
+    renderReposicoes();
+  });
+
+  var confirmando = null;
+  function renderReposicoes() {
+    var pend = pendentes(), feitas = estado.reposicoes.filter(function (r) { return r.feita; });
+    pend.sort(function (a, b) { return a.ref < b.ref ? -1 : 1; });
+    feitas.sort(function (a, b) { return a.feita > b.feita ? -1 : 1; });
+
+    var porTipo = function (t) { return pend.filter(function (r) { return r.tipo === t; }).length; };
+    $('resumo-rep').innerHTML = kpi(pend.length, 'a repor') + kpi(porTipo('individual'), 'individual') + kpi(porTipo('dupla'), 'dupla');
+    $('conta-pend').textContent = pend.length ? pend.length + (pend.length === 1 ? ' aula' : ' aulas') : '';
+    $('conta-feitas').textContent = feitas.length ? feitas.length + (feitas.length === 1 ? ' aula' : ' aulas') : '';
+
+    var lp = $('lista-pend'); lp.innerHTML = '';
+    if (!pend.length) lp.innerHTML = '<li><p class="vazio">Nenhuma reposição pendente.</p></li>';
+    pend.forEach(function (r) {
+      var li = item(r, 'Aula de ' + (r.origem === 'falta' ? 'semana de ' + rotuloSemana(r.semana) : curta(r.ref)));
+      var bts = li.querySelector('.botoes');
+      var data = document.createElement('input');
+      data.type = 'date'; data.className = 'data-feita'; data.value = hoje(); data.max = hoje();
+      data.setAttribute('aria-label', 'Data da reposição');
+      var ok = botao('Feita', 'acao', function () { r.feita = data.value || hoje(); salvar(); render(); });
+      bts.appendChild(data); bts.appendChild(ok);
+      if (r.origem === 'manual') bts.appendChild(botaoExcluir(r));
+      lp.appendChild(li);
+    });
+
+    var lf = $('lista-feitas'); lf.innerHTML = '';
+    if (!feitas.length) lf.innerHTML = '<li><p class="vazio">Nenhuma reposição feita ainda.</p></li>';
+    feitas.forEach(function (r) {
+      var li = item(r, 'Reposta em ' + curta(r.feita) + ' · referente a ' + (r.origem === 'falta' ? 'semana de ' + rotuloSemana(r.semana) : curta(r.ref)));
+      var bts = li.querySelector('.botoes');
+      bts.appendChild(botao('Desfazer', 'acao neutra', function () { r.feita = null; salvar(); render(); }));
+      if (r.origem === 'manual') bts.appendChild(botaoExcluir(r));
+      lf.appendChild(li);
+    });
+  }
+  function item(r, sub) {
+    var li = document.createElement('li');
+    li.innerHTML = '<div class="info"><span class="titulo">' + NOME[r.tipo] + '</span>' +
+      '<span class="sub">' + esc(sub) + (r.obs ? ' · ' + esc(r.obs) : '') + (r.origem === 'manual' ? ' · manual' : '') + '</span></div>' +
+      '<div class="botoes"></div>';
+    return li;
+  }
+  function botao(txt, cls, fn) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = txt;
+    b.addEventListener('click', fn); return b;
+  }
+  function botaoExcluir(r) {
+    // Dois toques: "Excluir" → "Confirmar?"
+    var b = botao(confirmando === r.id ? 'Confirmar?' : 'Excluir', 'acao perigo', function () {
+      if (confirmando === r.id) {
+        estado.reposicoes.splice(estado.reposicoes.indexOf(r), 1); confirmando = null; salvar();
+      } else confirmando = r.id;
+      render();
+    });
+    return b;
+  }
+
+  // ── Histórico ──
+  function renderHistorico() {
+    var semanas = Object.keys(estado.semanas);
+    estado.reposicoes.forEach(function (r) { if (r.feita) semanas.push(segunda(r.feita)); });
+    semanas.push(segunda(hoje()));
+    semanas = semanas.filter(function (s, i, a) { return a.indexOf(s) === i; }).sort().reverse();
+
+    var html = '', mesAtual = null, linhas = [];
+    function fechar() {
+      if (mesAtual === null) return;
+      var p = mesAtual.split('-');
+      var tot = linhas.reduce(function (a, l) { return a + l.total; }, 0);
+      html += '<div class="mes"><h2>' + MESES_LONGOS[+p[1] - 1] + ' ' + p[0] + '</h2><span class="conta">' + tot + (tot === 1 ? ' aula' : ' aulas') + '</span></div>' +
+        '<table class="tabela"><thead><tr><th>Semana</th><th class="c">Individual</th><th class="c">Dupla</th><th class="c">Repos.</th></tr></thead><tbody>' +
+        linhas.map(function (l) { return l.html; }).join('') + '</tbody></table>';
+      linhas = [];
+    }
+    semanas.forEach(function (seg) {
+      var mes = seg.slice(0, 7);
+      if (mes !== mesAtual) { fechar(); mesAtual = mes; }
+      var sem = estado.semanas[seg] || {};
+      var rep = estado.reposicoes.filter(function (r) { return r.feita && naSemana(r.feita, seg); }).length;
+      var feitas = TIPOS.filter(function (t) { return sem[t.id] === 'feita'; }).length;
+      linhas.push({
+        total: feitas + rep,
+        html: '<tr><td>' + rotuloSemana(seg) + '</td>' +
+          TIPOS.map(function (t) { return '<td class="c">' + marca(sem[t.id]) + '</td>'; }).join('') +
+          '<td class="c">' + (rep || '—') + '</td></tr>'
+      });
+    });
+    fechar();
+    $('historico').innerHTML = html + '<p class="dica" style="margin-top:1rem">✓ realizada · ✕ não teve (vai para reposição) · — pendente. Semanas agrupadas pelo mês da segunda-feira.</p>';
+  }
+  function marca(st) {
+    return st === 'feita' ? '<span class="marca feita" title="Realizada">✓</span>'
+      : st === 'falta' ? '<span class="marca falta" title="Não teve">✕</span>'
+      : '<span class="marca pend" title="Pendente">—</span>';
+  }
+
+  function render() {
+    if (!$('tela-semana').hidden) renderSemana();
+    if (!$('tela-reposicoes').hidden) renderReposicoes();
+    if (!$('tela-historico').hidden) renderHistorico();
+  }
+  // Volta a "esta semana" quando o app é retomado em outro dia
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') render(); });
+  render();
+})();
+</script>
+</body>
+</html>
