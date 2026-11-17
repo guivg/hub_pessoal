@@ -8,6 +8,7 @@ Ferramentas pessoais em HTML estático, sem build e sem servidor, publicadas no 
 | Menu | `ferramentas/menu/` | Monta o cardápio e a lista da semana |
 | Investimentos | `ferramentas/investimentos/` | Rebalanceamento, patrimônio consolidado e aportes extras em BTC |
 | Aulas de Tênis | `ferramentas/tenis/` | Aulas da semana (individual e dupla) e controle de reposições |
+| Mala de Viagem | `ferramentas/mala/` | Checklist da família por volume (malas, necessaires, bolsas), com etiquetas por tipo de viagem |
 
 ## Estrutura
 
@@ -28,6 +29,7 @@ No iPhone, cada ícone da Tela de Início tem o próprio armazenamento, separado
 | Menu | `meu-menu-v3` (e a antiga `cozinha_estado_v4`, lida só para migração) |
 | Investimentos | `meus-investimentos:v1` |
 | Aulas de Tênis | `aulas-tenis:v1` |
+| Mala de Viagem | `mala-viagem:v1` |
 
 ## Adicionar uma ferramenta
 

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Mala de Viagem</title>
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Mala">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F4F4F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../compartilhado/tema.css">
+<style>
+.tela[hidden]{display:none}
+h2{font:600 1.0625rem/1.3 var(--fonte);margin:0}
+h3{font:600 .8125rem/1.3 var(--fonte);color:var(--suave);margin:1rem 0 .25rem}
+h3:first-child{margin-top:.25rem}
+.dica{color:var(--suave);font-size:.8125rem;margin:0}
+[hidden]{display:none!important}
+
+/* botões e chips */
+.botao{border:1px solid var(--linha);background:var(--papel);padding:.5rem 1rem;border-radius:.5rem;font-weight:600;font-size:.875rem}
+.botao.cheio{background:var(--folha);border-color:var(--folha);color:var(--folha-tinta)}
+.botao.perigo{color:var(--perigo)}
+.link{border:0;background:none;padding:.25rem 0;color:var(--folha);font-weight:600;font-size:.8125rem;text-decoration:underline;text-underline-offset:3px}
+.link.perigo{color:var(--perigo)}
+.chips{display:flex;flex-wrap:wrap;gap:.375rem}
+.chip{border:1px solid var(--linha);background:var(--papel);padding:.3125rem .75rem;border-radius:999px;font-size:.8125rem;min-height:2rem}
+.chip[aria-pressed="true"]{background:var(--folha);border-color:var(--folha);color:var(--folha-tinta);font-weight:500}
+.etq{display:inline-block;font-size:.6875rem;font-weight:600;color:var(--suave);border:1px solid var(--linha);border-radius:999px;padding:0 .4375rem;margin-left:.25rem;vertical-align:1px;white-space:nowrap}
+.etq.saida{color:var(--alerta);border-color:currentColor}
+
+/* nova viagem */
+.card{background:var(--papel);border:1px solid var(--linha);border-radius:.75rem;padding:1rem}
+.card label{display:block;font-weight:600;font-size:.8125rem;color:var(--suave);margin:1rem 0 .375rem}
+.card label:first-of-type{margin-top:.75rem}
+.campo{width:100%;background:var(--fundo);border:1px solid var(--linha);border-radius:.5rem;padding:.4375rem .75rem}
+.card .botao.cheio{margin-top:1.25rem}
+
+/* cabeçalho da viagem */
+.viagem-topo{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.viagem-topo .tags{color:var(--suave);font-size:.8125rem;margin-top:.125rem}
+.progresso{margin:1rem 0 .75rem}
+.progresso .num{display:flex;justify-content:space-between;font-size:.8125rem;color:var(--suave);margin-bottom:.375rem}
+.progresso .num b{color:var(--tinta)}
+.barra{height:.375rem;background:var(--linha);border-radius:999px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--folha);border-radius:999px;transition:width .2s}
+.barra.mini{height:.25rem;margin-top:.375rem}
+.filtros{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
+
+/* volumes */
+details.vol{background:var(--papel);border:1px solid var(--linha);border-radius:.75rem;margin-bottom:.5rem}
+details.vol > summary{list-style:none;cursor:pointer;padding:.75rem 1rem}
+details.vol > summary::-webkit-details-marker{display:none}
+.vol-topo{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem}
+.vol-nome{font-weight:600}
+.vol-nome::before{content:"›";display:inline-block;width:1rem;color:var(--suave);transition:transform .15s}
+details[open] .vol-nome::before{transform:rotate(90deg)}
+.vol-conta{color:var(--suave);font-size:.8125rem;white-space:nowrap}
+.vol-conta.completo{color:var(--positivo);font-weight:600}
+.vol-corpo{padding:0 1rem .875rem}
+.vol.saida{border-color:var(--alerta)}
+.vol.saida .vol-nome::before{content:"";width:0}
+
+/* itens da viagem */
+.itens{list-style:none;margin:0;padding:0}
+.linha{display:flex;align-items:center;border-bottom:1px solid var(--linha)}
+.linha:last-child{border-bottom:0}
+.item{flex:1;min-width:0;display:flex;align-items:center;gap:.625rem;border:0;background:none;text-align:left;padding:.5rem 0;min-height:2.625rem}
+.caixa{flex:none;width:1.25rem;height:1.25rem;border:1.5px solid var(--suave);border-radius:.3125rem;display:grid;place-items:center}
+.linha.ok .caixa{background:var(--folha);border-color:var(--folha)}
+.linha.ok .caixa::after{content:"";width:.375rem;height:.6875rem;border:solid var(--folha-tinta);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.linha.ok .txt{color:var(--suave);text-decoration:line-through;text-decoration-color:var(--linha)}
+.txt .de{color:var(--suave);font-size:.75rem;margin-left:.375rem}
+.fora-btn{flex:none;border:0;background:none;color:var(--suave);font-size:.75rem;font-weight:500;padding:.5rem 0 .5rem .5rem}
+.linha.fora .txt{color:var(--suave);text-decoration:line-through}
+.linha.fora .caixa{border-style:dashed;opacity:.5}
+.novo{display:flex;gap:.5rem;margin-top:.75rem}
+.novo input{flex:1;min-width:0;background:var(--fundo);border:1px solid var(--linha);border-radius:.5rem;padding:.375rem .625rem;font-size:.9375rem}
+.novo button{flex:none;padding:.375rem .75rem}
+.rodape{margin-top:1.5rem;display:flex;flex-direction:column;align-items:flex-start;gap:.5rem}
+
+/* modelo */
+.m-item{display:flex;align-items:center;justify-content:space-between;gap:.5rem;border-bottom:1px solid var(--linha)}
+.m-item:last-child{border-bottom:0}
+.m-item > button{flex:1;min-width:0;text-align:left;border:0;background:none;padding:.5rem 0;min-height:2.5rem}
+.editor{background:var(--fundo);border:1px solid var(--linha);border-radius:.625rem;padding:.75rem;margin:.375rem 0}
+.editor .campo{background:var(--papel)}
+.editor .rot{display:block;font-weight:600;font-size:.75rem;color:var(--suave);margin:.75rem 0 .375rem}
+.editor .acoes{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.875rem;align-items:center}
+.editor .acoes .link.perigo{margin-left:auto}
+.cat-topo{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}
+.cat-topo .link{font-weight:500}
+.vol-ferr{display:flex;flex-wrap:wrap;gap:.25rem 1rem;margin:.25rem 0 .5rem}
+.aviso{min-height:1.25rem;margin:.5rem 0 0;font-size:.875rem;color:var(--folha)}
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header class="topo">
+    <h1><svg viewBox="12 12 76 76" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="4.5"/><rect x="31" y="40" width="38" height="28" rx="4" fill="currentColor" opacity=".35"/><path d="M42 40 V35 a3 3 0 0 1 3 -3 h10 a3 3 0 0 1 3 3 V40" fill="none" stroke="currentColor" stroke-width="4"/><path d="M41 47 V61 M59 47 V61" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>Mala de Viagem</h1>
+    <a class="voltar" href="../../">&larr; Hub</a>
+  </header>
+
+  <nav class="nav" aria-label="Seções">
+    <button type="button" data-tela="viagem" aria-current="page">Viagem</button>
+    <button type="button" data-tela="modelo">Listas-modelo</button>
+  </nav>
+
+  <section class="tela" id="tela-viagem"></section>
+  <section class="tela" id="tela-modelo" hidden></section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ═════ Configuração ═════
+  var TAGS = [
+    { id: 'praia', nome: 'Praia/piscina' },
+    { id: 'frio', nome: 'Frio' },
+    { id: 'formal', nome: 'Formal' },
+    { id: 'internacional', nome: 'Internacional' },
+    { id: 'aviao', nome: 'Avião' },
+    { id: 'carro', nome: 'Carro' }
+  ];
+  var NOME_TAG = {};
+  TAGS.forEach(function (t) { NOME_TAG[t.id] = t.nome; });
+
+  // Lista-modelo padrão. Cada item: "Nome #etiqueta !" — #etiqueta faz o item só
+  // aparecer em viagens com aquela etiqueta; "!" manda o item para "Na saída".
+  var PADRAO = [
+    { nome: 'Documentos', cats: [
+      ['Família', ['Comprovante de vacinas #internacional', 'Dinheiro em espécie']],
+      ['Guilherme', ['RG/CNH', 'Passaporte/visto #internacional', 'Cartões físicos', 'Cartão de crédito desbloqueado']],
+      ['Esposa', ['RG/CNH', 'Passaporte/visto #internacional']],
+      ['Aurora', ['Identidade', 'Certidão de nascimento', 'Passaporte #internacional']]
+    ]},
+    { nome: 'Mochila de bordo', cats: [
+      ['Eletrônicos', ['Carregadores !', 'Fone de ouvido', 'Notebook', 'Kindle']],
+      ['Leitura e conforto', ['Livro', 'Travesseiro de pescoço #aviao']],
+      ['Óculos', ['Óculos', 'Pano para limpeza dos óculos']]
+    ]},
+    { nome: 'Mala — Guilherme', cats: [
+      ['Roupas', ['Pijama', 'Cueca', 'Meia', 'Regata', 'Camiseta', 'Camisa', 'Short', 'Bermuda', 'Calça', 'Casaco', 'Roupa de treino', 'Sunga #praia', 'Terno #formal']],
+      ['Calçados', ['Tênis', 'Tênis de treino/corrida', 'Chinelo', 'Sapato #formal']],
+      ['Acessórios', ['Cinto', 'Relógio', 'Case para relógio', 'Gravata #formal', 'Luva #frio', 'Cachecol #frio', 'Touca #frio']]
+    ]},
+    { nome: 'Mala — Esposa', cats: [
+      ['Roupas', ['Pijama', 'Roupa íntima', 'Meia', 'Camiseta/blusa', 'Calça', 'Short/saia', 'Vestido', 'Casaco', 'Roupa de treino', 'Biquíni/maiô #praia', 'Saída de praia #praia', 'Roupa social #formal']],
+      ['Calçados', ['Tênis', 'Chinelo', 'Sandália', 'Sapato #formal']],
+      ['Acessórios', ['Óculos de sol', 'Bolsa', 'Bijuterias', 'Luva #frio', 'Cachecol #frio', 'Touca #frio']]
+    ]},
+    { nome: 'Necessaire — adultos', cats: [
+      ['Dentes', ['Pasta de dente', 'Escova de dente', 'Fio dental', 'Enxaguante bucal']],
+      ['Banho e cabelo', ['Shampoo', 'Sabonete', 'Sabonete de rosto', 'Escova de cabelo']],
+      ['Corpo', ['Desodorante', 'Perfume', 'Hidratante', 'Cotonete', 'Utensílios para cortar unha', 'Soro fisiológico']],
+      ['Sol', ['Protetor solar', 'Protetor solar facial', 'Protetor labial']]
+    ]},
+    { nome: 'Mala — Aurora', cats: [
+      ['Roupinhas', ['Body MC', 'Body ML', 'Calça', 'Short', 'Macacão', 'Meia', 'Chapéu/touca/turbante', 'Roupa de praia/piscina #praia', 'Blusa UV #praia', 'Luva #frio', 'Aero look #aviao']],
+      ['Calçados', ['Calçados', 'Chinelo']],
+      ['Acessórios', ['Laços', 'Presilha de cabelo', 'Pulseira', 'Óculos de sol', 'Manta', 'Fraldão']],
+      ['Banho', ['Toalha de banho']],
+      ['Brinquedos', ['Boneca', 'Baldinho de areia #praia']]
+    ]},
+    { nome: 'Bolsa da Aurora', cats: [
+      ['Alimentação', ['Pratinho', 'Colher', 'Forminhas de almoço/jantar', 'Potes para comidinhas', 'Mamadeira', 'Copinho de água', 'Papapa', 'Frutinhas !']],
+      ['Distração', ['Sophie', 'Mordedores']],
+      ['À mão', ['Paninho de boca']]
+    ]},
+    { nome: 'Necessaire — Aurora', cats: [
+      ['Troca de fralda', ['Fralda', 'Fralda de piscina #praia', 'Lenço umedecido', 'Talco', 'Maizena']],
+      ['Banho', ['Sabonete', 'Shampoo', 'Hidratante', 'Cotonete', 'Pente', 'Escova de cabelo', 'Pasta de dente']],
+      ['Sol', ['Protetor solar']]
+    ]},
+    { nome: 'Farmacinha — Aurora', cats: [
+      ['Uso diário', ['Vitamina D', 'Ferro']],
+      ['Se precisar', ['Luftal', 'Tylenol', 'Novalgina', 'Ondiff', 'Antialérgico', 'Xarope', 'Maresis', 'Matricaria', 'Cicastela', 'Pomada para picada de inseto']],
+      ['Acessórios', ['Seringa de dar remédio', 'Nebulizador', 'Gaze', 'Álcool 70']]
+    ]},
+    { nome: 'Equipamentos — Aurora', cats: [
+      ['Passeio e sono', ['Carrinho', 'Canguru', 'Berço', 'Berço portátil', 'Ruído branco', 'Câmera']],
+      ['Rotina', ['Cadeira de alimentação', 'Banheira', 'Tapetinho', 'Bola de pilates + acessórios']],
+      ['Água', ['Boia de piscina #praia', 'Piscina #praia']]
+    ]},
+    { nome: 'Família — casa e lazer', cats: [
+      ['Toalhas', ['Toalha de banho', 'Toalha de rosto']],
+      ['Organização', ['Saco a vácuo', 'Bomba para saco a vácuo', 'Extensão']],
+      ['Lazer', ['JBL', 'Copo Stanley', 'Bolsa térmica']]
+    ]},
+    { nome: 'Cooler', tags: ['carro'], cats: [
+      ['Comidas', ['Comidinhas da Aurora !', 'Frutas !']]
+    ]}
+  ];
+
+  // ═════ Utilidades ═════
+  var seq = 0;
+  function novoId() { return Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2, 5); }
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function hoje() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function aplica(tagsItem, tagsViagem) {
+    return !tagsItem || !tagsItem.length || tagsItem.some(function (t) { return tagsViagem.indexOf(t) > -1; });
+  }
+  function nomesTags(tags) { return tags.map(function (t) { return NOME_TAG[t] || t; }); }
+
+  function modeloPadrao() {
+    return { volumes: PADRAO.map(function (v) {
+      return { id: novoId(), nome: v.nome, tags: v.tags || [], categorias: v.cats.map(function (c) {
+        return { id: novoId(), nome: c[0], itens: c[1].map(function (s) {
+          var tags = [], saida = false;
+          var nome = s.replace(/\s*#(\w+)/g, function (_, t) { tags.push(t); return ''; })
+                      .replace(/\s*!\s*$/, function () { saida = true; return ''; }).trim();
+          return { id: novoId(), nome: nome, tags: tags, saida: saida };
+        }) };
+      }) };
+    }) };
+  }
+
+  // ═════ Estado (só neste aparelho) ═════
+  // modelo: { volumes: [{ id, nome, tags[], categorias: [{ id, nome, itens: [{ id, nome, tags[], saida }] }] }] }
+  // viagem: { nome, tags[], criada, volumes: [... itens: [{ id, nome, saida, ok, fora }] ] } | null
+  var CHAVE = 'mala-viagem:v1';
+  var estado;
+  try { estado = JSON.parse(localStorage.getItem(CHAVE)); } catch (e) {}
+  if (!estado || typeof estado !== 'object') estado = {};
+  if (!estado.modelo) estado.modelo = modeloPadrao();
+  if (estado.viagem === undefined) estado.viagem = null;
+  estado.abertos = estado.abertos || {};
+  function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
+  salvar();
+
+  // Estado de interface (não persiste)
+  var ui = { tela: 'viagem', soFalta: false, tagsNova: [], editando: null, confirmar: null, aviso: '' };
+
+  // ═════ Navegação ═════
+  function abrirTela(nome) {
+    ui.tela = nome; ui.editando = null; ui.confirmar = null; ui.aviso = '';
+    document.querySelectorAll('.nav button').forEach(function (b) {
+      if (b.dataset.tela === nome) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    $('tela-viagem').hidden = nome !== 'viagem';
+    $('tela-modelo').hidden = nome !== 'modelo';
+    render();
+  }
+  document.querySelectorAll('.nav button').forEach(function (b) {
+    b.addEventListener('click', function () { abrirTela(b.dataset.tela); });
+  });
+
+  // ═════ Viagem ═════
+  function criarViagem(nome, tags) {
+    var vols = [];
+    estado.modelo.volumes.forEach(function (v) {
+      if (!aplica(v.tags, tags)) return;
+      var cats = [];
+      v.categorias.forEach(function (c) {
+        var itens = c.itens.filter(function (i) { return aplica(i.tags, tags); })
+          .map(function (i) { return { id: novoId(), nome: i.nome, saida: !!i.saida, ok: false, fora: false }; });
+        if (itens.length) cats.push({ id: novoId(), nome: c.nome, itens: itens });
+      });
+      if (cats.length) vols.push({ id: novoId(), nome: v.nome, categorias: cats });
+    });
+    estado.viagem = { nome: nome, tags: tags, criada: hoje(), volumes: vols };
+    estado.abertos = {};
+    salvar();
+  }
+  function cadaItemViagem(fn) {
+    estado.viagem.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) { fn(i, c, v); }); }); });
+  }
+  function acharItemViagem(id) {
+    var achado = null;
+    cadaItemViagem(function (i, c, v) { if (i.id === id) achado = { item: i, cat: c, vol: v }; });
+    return achado;
+  }
+  function contar(itens) {
+    var t = 0, ok = 0;
+    itens.forEach(function (i) { if (!i.fora) { t++; if (i.ok) ok++; } });
+    return { total: t, ok: ok };
+  }
+  function linhaItem(i, de) {
+    return '<li class="linha' + (i.ok ? ' ok' : '') + (i.fora ? ' fora' : '') + '">' +
+      '<button type="button" class="item" data-acao="marcar" data-id="' + i.id + '" aria-pressed="' + i.ok + '"' + (i.fora ? ' disabled' : '') + '>' +
+        '<span class="caixa" aria-hidden="true"></span><span class="txt">' + esc(i.nome) + (de ? '<span class="de">' + esc(de) + '</span>' : '') + '</span></button>' +
+      '<button type="button" class="fora-btn" data-acao="fora" data-id="' + i.id + '">' + (i.fora ? 'Vai' : 'Não vai') + '</button></li>';
+  }
+  function visivel(i) { return !(ui.soFalta && (i.ok || i.fora)); }
+
+  function renderViagem() {
+    var el = $('tela-viagem');
+    if (!estado.viagem) {
+      el.innerHTML =
+        '<div class="card"><h2>Nova viagem</h2>' +
+        '<p class="dica" style="margin-top:.25rem">A lista é montada a partir das listas-modelo. Marque o tipo de viagem para trazer só o que se aplica.</p>' +
+        '<label for="nv-nome">Nome</label><input class="campo" id="nv-nome" placeholder="Ex.: Praia em janeiro" autocomplete="off">' +
+        '<label>Tipo de viagem</label><div class="chips">' +
+          TAGS.map(function (t) { return '<button type="button" class="chip" data-acao="tag-nova" data-tag="' + t.id + '" aria-pressed="' + (ui.tagsNova.indexOf(t.id) > -1) + '">' + t.nome + '</button>'; }).join('') +
+        '</div>' +
+        '<button type="button" class="botao cheio" data-acao="criar">Criar lista</button></div>';
+      return;
+    }
+    var vg = estado.viagem, todos = [], saida = [];
+    cadaItemViagem(function (i, c, v) { todos.push(i); if (i.saida) saida.push({ i: i, de: v.nome }); });
+    var g = contar(todos), pct = g.total ? Math.round(g.ok / g.total * 100) : 0;
+
+    var h = '<div class="viagem-topo"><div><h2>' + esc(vg.nome) + '</h2>' +
+      '<div class="tags">' + (vg.tags.length ? nomesTags(vg.tags).join(' · ') : 'Sem etiquetas') + '</div></div></div>' +
+      '<div class="progresso"><div class="num"><span><b>' + g.ok + '</b> de ' + g.total + ' itens</span><span>' + pct + '%</span></div>' +
+      '<div class="barra"><i style="width:' + pct + '%"></i></div></div>' +
+      '<div class="filtros"><div class="chips"><button type="button" class="chip" data-acao="so-falta" aria-pressed="' + ui.soFalta + '">Só o que falta</button></div>' +
+      '<button type="button" class="link" data-acao="abrir-todos">' + (todosAbertos() ? 'Fechar todos' : 'Abrir todos') + '</button></div>';
+
+    // Na saída: itens de última hora, de todos os volumes
+    if (saida.length) {
+      var cs = contar(saida.map(function (x) { return x.i; }));
+      var vis = saida.filter(function (x) { return visivel(x.i); });
+      if (vis.length || !ui.soFalta) {
+        h += '<div class="vol saida card" style="padding:.75rem 1rem;margin-bottom:.5rem">' +
+          '<div class="vol-topo"><span class="vol-nome">Na saída</span><span class="vol-conta' + (cs.ok === cs.total ? ' completo' : '') + '">' + cs.ok + '/' + cs.total + '</span></div>' +
+          '<p class="dica" style="margin:.125rem 0 .25rem">Última hora: confira na porta.</p>' +
+          '<ul class="itens">' + vis.map(function (x) { return linhaItem(x.i, x.de); }).join('') + '</ul></div>';
+      }
+    }
+
+    vg.volumes.forEach(function (v) {
+      var itensVol = [];
+      v.categorias.forEach(function (c) { c.itens.forEach(function (i) { if (!i.saida) itensVol.push(i); }); });
+      var cv = contar(itensVol);
+      var completo = cv.total > 0 && cv.ok === cv.total;
+      if (ui.soFalta && completo) return;
+      var corpo = '';
+      v.categorias.forEach(function (c) {
+        var its = c.itens.filter(function (i) { return !i.saida && visivel(i); });
+        // não-vão por último
+        its.sort(function (a, b) { return (a.fora ? 1 : 0) - (b.fora ? 1 : 0); });
+        if (its.length) corpo += '<h3>' + esc(c.nome) + '</h3><ul class="itens">' + its.map(function (i) { return linhaItem(i); }).join('') + '</ul>';
+      });
+      corpo += '<form class="novo" data-form="extra" data-vol="' + v.id + '"><input placeholder="Item só nesta viagem" aria-label="Novo item em ' + esc(v.nome) + '" autocomplete="off"><button class="botao">Adicionar</button></form>';
+      var p = cv.total ? Math.round(cv.ok / cv.total * 100) : 0;
+      h += '<details class="vol" data-chave="v:' + v.id + '"' + (estado.abertos['v:' + v.id] ? ' open' : '') + '>' +
+        '<summary><div class="vol-topo"><span class="vol-nome">' + esc(v.nome) + '</span>' +
+        '<span class="vol-conta' + (completo ? ' completo' : '') + '">' + (completo ? '✓ ' : '') + cv.ok + '/' + cv.total + '</span></div>' +
+        '<div class="barra mini"><i style="width:' + p + '%"></i></div></summary>' +
+        '<div class="vol-corpo">' + corpo + '</div></details>';
+    });
+
+    if (ui.soFalta && g.ok === g.total && g.total) h += '<p class="dica" style="margin-top:1rem">Tudo pronto. Boa viagem!</p>';
+
+    h += '<div class="rodape">' +
+      '<button type="button" class="link" data-acao="desmarcar">' + (ui.confirmar === 'desmarcar' ? 'Confirmar: desmarcar tudo?' : 'Desmarcar tudo (para a volta)') + '</button>' +
+      '<button type="button" class="link perigo" data-acao="encerrar">' + (ui.confirmar === 'encerrar' ? 'Confirmar: encerrar e apagar esta lista?' : 'Encerrar viagem') + '</button>' +
+      '</div>';
+    el.innerHTML = h;
+  }
+  function todosAbertos() {
+    return estado.viagem && estado.viagem.volumes.every(function (v) { return estado.abertos['v:' + v.id]; });
+  }
+
+  // ═════ Listas-modelo ═════
+  function acharItemModelo(id) {
+    var r = null;
+    estado.modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) { if (i.id === id) r = { item: i, cat: c, vol: v }; }); }); });
+    return r;
+  }
+  function acharVol(id) { return estado.modelo.volumes.filter(function (v) { return v.id === id; })[0]; }
+  function acharCat(id) {
+    var r = null;
+    estado.modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { if (c.id === id) r = { cat: c, vol: v }; }); });
+    return r;
+  }
+  function chipsTags(sel, acao, id) {
+    return '<div class="chips">' + TAGS.map(function (t) {
+      return '<button type="button" class="chip" data-acao="' + acao + '" data-id="' + id + '" data-tag="' + t.id + '" aria-pressed="' + (sel.indexOf(t.id) > -1) + '">' + t.nome + '</button>';
+    }).join('') + '</div>';
+  }
+  function editorItem(i) {
+    return '<li class="editor" data-editor="' + i.id + '">' +
+      '<span class="rot">Nome</span><input class="campo" data-campo="nome" value="' + esc(i.nome) + '" autocomplete="off">' +
+      '<span class="rot">Só em viagens com (vazio = sempre)</span>' + chipsTags(i.tags, 'tag-item', i.id) +
+      '<span class="rot">Última hora</span><div class="chips"><button type="button" class="chip" data-acao="saida-item" data-id="' + i.id + '" aria-pressed="' + !!i.saida + '">Vai em "Na saída"</button></div>' +
+      '<div class="acoes"><button type="button" class="botao cheio" data-acao="salvar-item" data-id="' + i.id + '">Pronto</button>' +
+      '<button type="button" class="link perigo" data-acao="excluir-item" data-id="' + i.id + '">' + (ui.confirmar === 'item:' + i.id ? 'Confirmar exclusão?' : 'Excluir item') + '</button></div></li>';
+  }
+  function editorNome(tipo, id, nome, extra) {
+    return '<div class="editor" data-editor="' + id + '">' +
+      '<span class="rot">Nome ' + (tipo === 'vol' ? 'do volume' : 'da categoria') + '</span><input class="campo" data-campo="nome" value="' + esc(nome) + '" autocomplete="off">' +
+      (extra || '') +
+      '<div class="acoes"><button type="button" class="botao cheio" data-acao="salvar-' + tipo + '" data-id="' + id + '">Pronto</button>' +
+      '<button type="button" class="link perigo" data-acao="excluir-' + tipo + '" data-id="' + id + '">' + (ui.confirmar === tipo + ':' + id ? 'Confirmar exclusão (apaga os itens)?' : 'Excluir') + '</button></div></div>';
+  }
+
+  function renderModelo() {
+    var el = $('tela-modelo');
+    var h = '<p class="dica" style="margin-bottom:1rem">Base de toda viagem nova. Toque num item para editar nome, etiquetas e "Na saída". Mudanças aqui valem a partir da próxima viagem criada.</p>';
+    estado.modelo.volumes.forEach(function (v) {
+      var n = 0; v.categorias.forEach(function (c) { n += c.itens.length; });
+      var corpo = '';
+      if (ui.editando === 'vol:' + v.id) {
+        corpo += editorNome('vol', v.id, v.nome, '<span class="rot">Volume só em viagens com (vazio = sempre)</span>' + chipsTags(v.tags || [], 'tag-vol', v.id));
+      } else {
+        corpo += '<div class="vol-ferr"><button type="button" class="link" data-acao="editar" data-id="vol:' + v.id + '">Editar volume</button>' +
+          '<button type="button" class="link" data-acao="nova-cat" data-id="' + v.id + '">+ Categoria</button></div>';
+      }
+      v.categorias.forEach(function (c) {
+        if (ui.editando === 'cat:' + c.id) corpo += editorNome('cat', c.id, c.nome);
+        else corpo += '<div class="cat-topo"><h3>' + esc(c.nome) + '</h3><button type="button" class="link" data-acao="editar" data-id="cat:' + c.id + '">Renomear</button></div>';
+        corpo += '<ul class="itens">' + c.itens.map(function (i) {
+          if (ui.editando === 'item:' + i.id) return editorItem(i);
+          return '<li class="m-item"><button type="button" data-acao="editar" data-id="item:' + i.id + '">' + esc(i.nome) +
+            (i.saida ? '<span class="etq saida">Na saída</span>' : '') +
+            nomesTags(i.tags || []).map(function (t) { return '<span class="etq">' + esc(t) + '</span>'; }).join('') +
+            '</button></li>';
+        }).join('') + '</ul>' +
+          '<form class="novo" data-form="item-modelo" data-cat="' + c.id + '"><input placeholder="Novo item em ' + esc(c.nome) + '" aria-label="Novo item em ' + esc(c.nome) + '" autocomplete="off"><button class="botao">Adicionar</button></form>';
+      });
+      h += '<details class="vol" data-chave="m:' + v.id + '"' + (estado.abertos['m:' + v.id] ? ' open' : '') + '>' +
+        '<summary><div class="vol-topo"><span class="vol-nome">' + esc(v.nome) +
+        (v.tags && v.tags.length ? nomesTags(v.tags).map(function (t) { return '<span class="etq">' + esc(t) + '</span>'; }).join('') : '') +
+        '</span><span class="vol-conta">' + n + (n === 1 ? ' item' : ' itens') + '</span></div></summary>' +
+        '<div class="vol-corpo">' + corpo + '</div></details>';
+    });
+    h += '<form class="novo" data-form="novo-vol" style="margin-top:1rem"><input placeholder="Novo volume (mala, necessaire, bolsa…)" aria-label="Novo volume" autocomplete="off"><button class="botao">Criar</button></form>' +
+      '<p class="aviso" role="status">' + esc(ui.aviso) + '</p>' +
+      '<div class="rodape"><button type="button" class="link perigo" data-acao="restaurar">' +
+      (ui.confirmar === 'restaurar' ? 'Confirmar: voltar às listas originais (perde suas edições)?' : 'Restaurar listas originais') + '</button></div>';
+    el.innerHTML = h;
+  }
+
+  function render() {
+    if (ui.tela === 'viagem') renderViagem(); else renderModelo();
+  }
+  // Re-renderiza preservando a rolagem e, se houver, o foco num campo "novo"
+  function atualizar(focoSeletor) {
+    var y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+    if (focoSeletor) { var f = document.querySelector(focoSeletor); if (f) f.focus(); }
+  }
+
+  // ═════ Eventos ═════
+  document.addEventListener('toggle', function (ev) {
+    var d = ev.target;
+    if (d.tagName !== 'DETAILS' || !d.dataset.chave) return;
+    if (d.open) estado.abertos[d.dataset.chave] = 1; else delete estado.abertos[d.dataset.chave];
+    salvar();
+  }, true);
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-acao]');
+    if (!b) return;
+    var acao = b.dataset.acao, id = b.dataset.id;
+    var manterConfirmar = false;
+    // Antes de re-renderizar um editor aberto, guarda o nome que está sendo digitado
+    if (/^(tag-item|saida-item)$/.test(acao)) { var dig = lerNome(id); if (dig) acharItemModelo(id).item.nome = dig; }
+    if (acao === 'tag-vol') { var dv = lerNome(id); if (dv) acharVol(id).nome = dv; }
+
+    switch (acao) {
+      // ── viagem ──
+      case 'tag-nova':
+        var k = ui.tagsNova.indexOf(b.dataset.tag);
+        if (k > -1) ui.tagsNova.splice(k, 1); else ui.tagsNova.push(b.dataset.tag);
+        b.setAttribute('aria-pressed', String(k === -1));
+        return; // não re-renderiza: preserva o nome digitado
+      case 'criar':
+        var nome = ($('nv-nome').value || '').trim() || 'Viagem';
+        criarViagem(nome, ui.tagsNova.slice()); ui.tagsNova = [];
+        break;
+      case 'marcar':
+        var a = acharItemViagem(id); if (a) { a.item.ok = !a.item.ok; salvar(); }
+        break;
+      case 'fora':
+        var f = acharItemViagem(id); if (f) { f.item.fora = !f.item.fora; if (f.item.fora) f.item.ok = false; salvar(); }
+        break;
+      case 'so-falta': ui.soFalta = !ui.soFalta; break;
+      case 'abrir-todos':
+        var abrir = !todosAbertos();
+        estado.viagem.volumes.forEach(function (v) { if (abrir) estado.abertos['v:' + v.id] = 1; else delete estado.abertos['v:' + v.id]; });
+        salvar(); break;
+      case 'desmarcar':
+        if (ui.confirmar !== 'desmarcar') { ui.confirmar = 'desmarcar'; manterConfirmar = true; break; }
+        cadaItemViagem(function (i) { i.ok = false; }); salvar(); break;
+      case 'encerrar':
+        if (ui.confirmar !== 'encerrar') { ui.confirmar = 'encerrar'; manterConfirmar = true; break; }
+        estado.viagem = null; estado.abertos = {}; ui.soFalta = false; salvar(); break;
+
+      // ── modelo ──
+      case 'editar': ui.editando = id; break;
+      case 'tag-item':
+        var ti = acharItemModelo(id).item; toggle(ti.tags, b.dataset.tag); salvar(); manterConfirmar = true; break;
+      case 'tag-vol':
+        var tv = acharVol(id); tv.tags = tv.tags || []; toggle(tv.tags, b.dataset.tag); salvar(); manterConfirmar = true; break;
+      case 'saida-item':
+        var si = acharItemModelo(id).item; si.saida = !si.saida; salvar(); manterConfirmar = true; break;
+      case 'salvar-item':
+        var ei = acharItemModelo(id).item, nn = lerNome(id); if (nn) ei.nome = nn; salvar(); ui.editando = null; break;
+      case 'salvar-vol':
+        var nv = lerNome(id); if (nv) acharVol(id).nome = nv; salvar(); ui.editando = null; break;
+      case 'salvar-cat':
+        var nc = lerNome(id); if (nc) acharCat(id).cat.nome = nc; salvar(); ui.editando = null; break;
+      case 'excluir-item':
+        if (ui.confirmar !== 'item:' + id) { ui.confirmar = 'item:' + id; manterConfirmar = true; break; }
+        var xi = acharItemModelo(id); xi.cat.itens.splice(xi.cat.itens.indexOf(xi.item), 1); salvar(); ui.editando = null; break;
+      case 'excluir-cat':
+        if (ui.confirmar !== 'cat:' + id) { ui.confirmar = 'cat:' + id; manterConfirmar = true; break; }
+        var xc = acharCat(id); xc.vol.categorias.splice(xc.vol.categorias.indexOf(xc.cat), 1); salvar(); ui.editando = null; break;
+      case 'excluir-vol':
+        if (ui.confirmar !== 'vol:' + id) { ui.confirmar = 'vol:' + id; manterConfirmar = true; break; }
+        estado.modelo.volumes.splice(estado.modelo.volumes.indexOf(acharVol(id)), 1); salvar(); ui.editando = null; break;
+      case 'nova-cat':
+        var cat = { id: novoId(), nome: 'Nova categoria', itens: [] };
+        acharVol(id).categorias.push(cat); salvar(); ui.editando = 'cat:' + cat.id; break;
+      case 'restaurar':
+        if (ui.confirmar !== 'restaurar') { ui.confirmar = 'restaurar'; manterConfirmar = true; break; }
+        estado.modelo = modeloPadrao(); salvar(); ui.editando = null; ui.aviso = 'Listas originais restauradas.'; break;
+      default: return;
+    }
+    if (!manterConfirmar) ui.confirmar = null;
+    // Foco no nome só ao abrir um editor (evita abrir o teclado ao tocar em etiquetas)
+    atualizar(acao === 'editar' || acao === 'nova-cat' ? '[data-editor] [data-campo=nome]' : null);
+  });
+
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target; if (!f.dataset.form) return;
+    ev.preventDefault();
+    var nome = f.querySelector('input').value.trim();
+    if (!nome) return;
+    var foco = null;
+    if (f.dataset.form === 'extra') {
+      var v = estado.viagem.volumes.filter(function (x) { return x.id === f.dataset.vol; })[0];
+      var cat = v.categorias.filter(function (c) { return c.nome === 'Extras'; })[0];
+      if (!cat) { cat = { id: novoId(), nome: 'Extras', itens: [] }; v.categorias.push(cat); }
+      cat.itens.push({ id: novoId(), nome: nome, saida: false, ok: false, fora: false });
+      foco = '[data-form=extra][data-vol="' + v.id + '"] input';
+    } else if (f.dataset.form === 'item-modelo') {
+      acharCat(f.dataset.cat).cat.itens.push({ id: novoId(), nome: nome, tags: [], saida: false });
+      foco = '[data-form=item-modelo][data-cat="' + f.dataset.cat + '"] input';
+    } else if (f.dataset.form === 'novo-vol') {
+      var vol = { id: novoId(), nome: nome, tags: [], categorias: [{ id: novoId(), nome: 'Itens', itens: [] }] };
+      estado.modelo.volumes.push(vol); estado.abertos['m:' + vol.id] = 1;
+      foco = '[data-cat="' + vol.categorias[0].id + '"] input';
+    }
+    salvar(); ui.confirmar = null; ui.aviso = '';
+    atualizar(foco);
+  });
+
+  // Enter no editor = Pronto
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter' || !ev.target.matches('[data-editor] [data-campo=nome]')) return;
+    ev.preventDefault();
+    var bt = ev.target.closest('[data-editor]').querySelector('.botao.cheio'); if (bt) bt.click();
+  });
+
+  function toggle(lista, v) { var k = lista.indexOf(v); if (k > -1) lista.splice(k, 1); else lista.push(v); }
+  function lerNome(id) {
+    var c = document.querySelector('[data-editor="' + id + '"] [data-campo=nome]');
+    return c ? c.value.trim() : '';
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
