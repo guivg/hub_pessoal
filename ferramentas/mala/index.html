@@ -182,7 +182,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       ['À mão', ['Paninho de boca']]
     ]},
     { nome: 'Necessaire — Aurora', cats: [
-      ['Troca de fralda', ['Fralda', 'Fralda de piscina #praia', 'Lenço umedecido', 'Talco (revisar: risco de inalação) ?', 'Maizena ?']],
+      ['Troca de fralda', ['Fralda', 'Fralda de piscina #praia', 'Lenço umedecido', 'Talco (revisar: risco de inalação)', 'Maizena']],
       ['Banho', ['Sabonete', 'Shampoo', 'Hidratante', 'Cotonete', 'Pente', 'Escova de cabelo', 'Pasta de dente']],
       ['Sol', ['Protetor solar']]
     ]},
@@ -228,8 +228,8 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     ['Farmacinha — Aurora', 'Acessórios', 'Receitas e orientações médicas'],
     ['Equipamentos — Aurora', 'Passeio e sono', 'Lençol para berço'],
     ['Equipamentos — Aurora', 'Passeio e sono', 'Protetor impermeável de colchão'],
-    ['Equipamentos — Aurora', 'Passeio e sono', 'Mosquiteiro ?'],
-    ['Equipamentos — Aurora', 'Passeio e sono', 'Luz noturna ?'],
+    ['Equipamentos — Aurora', 'Passeio e sono', 'Mosquiteiro'],
+    ['Equipamentos — Aurora', 'Passeio e sono', 'Luz noturna'],
     ['Família — casa e lazer', 'Lazer', 'Garrafa de água'],
     ['Família — casa e lazer', 'Organização', 'Sacos para roupa suja'],
     ['Casa', 'Antes de sair', 'Geladeira conferida !'],
@@ -260,12 +260,12 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       }) };
     }) };
   }
-  // "Nome #etiqueta !" ou "?" — ! = Na saída, ? = opcional (começa como "Não vai")
+  // "Nome #etiqueta !" — ! = Na saída
   function lerItem(s) {
-    var tags = [], saida = false, opcional = false;
+    var tags = [], saida = false;
     var nome = s.replace(/\s*#(\w+)/g, function (_, t) { tags.push(t); return ''; })
-                .replace(/\s*([!?])\s*$/, function (_, m) { if (m === '!') saida = true; else opcional = true; return ''; }).trim();
-    return { id: novoId(), nome: nome, tags: tags, saida: saida, opcional: opcional };
+                .replace(/\s*!\s*$/, function () { saida = true; return ''; }).trim();
+    return { id: novoId(), nome: nome, tags: tags, saida: saida };
   }
   function aplicarV2(modelo) {
     ACRESCIMOS_V2.forEach(function (a) {
@@ -276,10 +276,9 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       if (!c) { c = { id: novoId(), nome: a[1], itens: [] }; v.categorias.push(c); }
       if (!c.itens.some(function (i) { return i.nome.toLowerCase() === item.nome.toLowerCase(); })) c.itens.push(item);
     });
-    // Talco e maizena: viram opcionais (talco com alerta)
+    // Talco: ganha o alerta no nome
     modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) {
-      if (v.nome === 'Necessaire — Aurora' && i.nome === 'Talco') { i.nome = 'Talco (revisar: risco de inalação)'; i.opcional = true; }
-      if (v.nome === 'Necessaire — Aurora' && i.nome === 'Maizena') i.opcional = true;
+      if (v.nome === 'Necessaire — Aurora' && i.nome === 'Talco') i.nome = 'Talco (revisar: risco de inalação)';
     }); }); });
     return modelo;
   }
@@ -294,6 +293,15 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   if (!estado || typeof estado !== 'object') estado = {};
   if (!estado.modelo) { estado.modelo = modeloCompleto(); estado.versao = 2; }
   if ((estado.versao || 1) < 2) { aplicarV2(estado.modelo); estado.versao = 2; }
+  estado.modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) { delete i.opcional; }); }); });
+  // Uma vez só: itens que entraram como "Não vai" pela antiga regra de opcional voltam a "vai"
+  if (!estado.semOpcional) {
+    var ex = /^(Talco|Maizena|Mosquiteiro|Luz noturna)/;
+    if (estado.viagem) estado.viagem.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) {
+      if (i.fora && !i.ok && ex.test(i.nome)) i.fora = false;
+    }); }); });
+    estado.semOpcional = true;
+  }
   if (estado.viagem === undefined) estado.viagem = null;
   estado.abertos = estado.abertos || {};
   // Migração: "Esposa" → "Camila" em listas já salvas no aparelho
@@ -332,7 +340,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       var cats = [];
       v.categorias.forEach(function (c) {
         var itens = c.itens.filter(function (i) { return aplica(i.tags, tags); })
-          .map(function (i) { return { id: novoId(), nome: i.nome, saida: !!i.saida, ok: false, fora: !!i.opcional }; });
+          .map(function (i) { return { id: novoId(), nome: i.nome, saida: !!i.saida, ok: false, fora: false }; });
         if (itens.length) cats.push({ id: novoId(), nome: c.nome, itens: itens });
       });
       if (cats.length) vols.push({ id: novoId(), nome: v.nome, categorias: cats });
@@ -461,8 +469,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     return '<li class="editor" data-editor="' + i.id + '">' +
       '<span class="rot">Nome</span><input class="campo" data-campo="nome" value="' + esc(i.nome) + '" autocomplete="off">' +
       '<span class="rot">Só em viagens com (vazio = sempre)</span>' + chipsTags(i.tags, 'tag-item', i.id) +
-      '<span class="rot">Opções</span><div class="chips"><button type="button" class="chip" data-acao="saida-item" data-id="' + i.id + '" aria-pressed="' + !!i.saida + '">Vai em "Na saída"</button>' +
-      '<button type="button" class="chip" data-acao="opcional-item" data-id="' + i.id + '" aria-pressed="' + !!i.opcional + '">Opcional</button></div>' +
+      '<span class="rot">Última hora</span><div class="chips"><button type="button" class="chip" data-acao="saida-item" data-id="' + i.id + '" aria-pressed="' + !!i.saida + '">Vai em "Na saída"</button></div>' +
       '<div class="acoes"><button type="button" class="botao cheio" data-acao="salvar-item" data-id="' + i.id + '">Pronto</button>' +
       '<button type="button" class="link perigo" data-acao="excluir-item" data-id="' + i.id + '">' + (ui.confirmar === 'item:' + i.id ? 'Confirmar exclusão?' : 'Excluir item') + '</button></div></li>';
   }
@@ -476,7 +483,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
 
   function renderModelo() {
     var el = $('tela-modelo');
-    var h = '<p class="dica" style="margin-bottom:1rem">Base de toda viagem nova. Toque num item para editar nome, etiquetas e opções. Mudanças aqui valem a partir da próxima viagem criada.</p>';
+    var h = '<p class="dica" style="margin-bottom:1rem">Base de toda viagem nova. Toque num item para editar nome, etiquetas e "Na saída". Mudanças aqui valem a partir da próxima viagem criada.</p>';
     estado.modelo.volumes.forEach(function (v) {
       var n = 0; v.categorias.forEach(function (c) { n += c.itens.length; });
       var corpo = '';
@@ -493,7 +500,6 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
           if (ui.editando === 'item:' + i.id) return editorItem(i);
           return '<li class="m-item"><button type="button" data-acao="editar" data-id="item:' + i.id + '">' + esc(i.nome) +
             (i.saida ? '<span class="etq saida">Na saída</span>' : '') +
-            (i.opcional ? '<span class="etq">Opcional</span>' : '') +
             nomesTags(i.tags || []).map(function (t) { return '<span class="etq">' + esc(t) + '</span>'; }).join('') +
             '</button></li>';
         }).join('') + '</ul>' +
@@ -537,7 +543,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     var acao = b.dataset.acao, id = b.dataset.id;
     var manterConfirmar = false;
     // Antes de re-renderizar um editor aberto, guarda o nome que está sendo digitado
-    if (/^(tag-item|saida-item|opcional-item)$/.test(acao)) { var dig = lerNome(id); if (dig) acharItemModelo(id).item.nome = dig; }
+    if (/^(tag-item|saida-item)$/.test(acao)) { var dig = lerNome(id); if (dig) acharItemModelo(id).item.nome = dig; }
     if (acao === 'tag-vol') { var dv = lerNome(id); if (dv) acharVol(id).nome = dv; }
 
     switch (acao) {
@@ -580,8 +586,6 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         var ti = acharItemModelo(id).item; toggle(ti.tags, b.dataset.tag); salvar(); manterConfirmar = true; break;
       case 'tag-vol':
         var tv = acharVol(id); tv.tags = tv.tags || []; toggle(tv.tags, b.dataset.tag); salvar(); manterConfirmar = true; break;
-      case 'opcional-item':
-        var oi = acharItemModelo(id).item; oi.opcional = !oi.opcional; salvar(); manterConfirmar = true; break;
       case 'saida-item':
         var si = acharItemModelo(id).item; si.saida = !si.saida; salvar(); manterConfirmar = true; break;
       case 'salvar-item':
