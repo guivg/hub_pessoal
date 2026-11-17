@@ -109,7 +109,6 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
   <section class="tela" id="tela-reposicoes" hidden>
     <div id="cards-rep"></div>
     <p class="aviso" id="aviso-rep" role="status"></p>
-    <p class="dica">Para abater, registre a aula extra na aba Semana: ela desconta a reposição mais antiga do tipo.</p>
   </section>
 
 </div>
@@ -225,7 +224,7 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
     TIPOS.forEach(function (t) {
       var st = sem[t.id] || null;
       var rep = repDaFalta(seg, t.id);
-      var txtEstado = st === 'feita' ? 'Realizada' : st === 'falta' ? (rep && rep.feita ? 'Reposta em ' + curta(rep.feita) : 'A repor') : 'Pendente';
+      var txtEstado = st === 'feita' ? 'Realizada' : st === 'falta' ? (rep && rep.feita ? 'Reposta em ' + curta(rep.feita) : 'Para repor') : 'Pendente';
       var div = document.createElement('div');
       div.className = 'card';
       div.innerHTML =
@@ -252,7 +251,7 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
       var linha = document.createElement('div');
       linha.className = 'extra';
       linha.innerHTML =
-        '<div class="info"><b>' + t.nome + '</b><span>' + (nPend ? nPend + ' a repor' : 'Nada a repor') + '</span></div>' +
+        '<div class="info"><b>' + t.nome + '</b><span>' + (nPend ? nPend + ' para repor' : 'Nada para repor') + '</span></div>' +
         '<div class="passo">' +
           '<button type="button" data-acao="menos" aria-label="Desfazer aula extra ' + t.nome.toLowerCase() + '"' + (nExtra ? '' : ' disabled') + '>&minus;</button>' +
           '<output aria-label="Aulas extras ' + t.nome.toLowerCase() + ' nesta semana">' + nExtra + '</output>' +
@@ -297,7 +296,7 @@ h2{font:600 .9375rem/1.3 var(--fonte);margin:0}
       div.className = 'card';
       div.innerHTML =
         '<h2>' + t.nome + '</h2>' +
-        '<div class="saldo"><b>' + n + '</b><span>' + (n === 1 ? 'aula a repor' : 'aulas a repor') + '</span></div>' +
+        '<div class="saldo"><b>' + n + '</b><span>' + (n === 1 ? 'aula para repor' : 'aulas para repor') + '</span></div>' +
         '<button type="button" class="botao" data-acao="mais" style="width:100%;min-height:2.75rem">+ Registrar reposição</button>';
       div.querySelector('[data-acao=mais]').addEventListener('click', function () {
         estado.reposicoes.push({ id: novoId(), tipo: t.id, origem: 'manual', criada: hoje(), feita: null });

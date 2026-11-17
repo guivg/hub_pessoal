@@ -139,7 +139,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     { nome: 'Documentos', cats: [
       ['Família', ['Comprovante de vacinas #internacional', 'Dinheiro em espécie']],
       ['Guilherme', ['RG/CNH', 'Passaporte/visto #internacional', 'Cartões físicos', 'Cartão de crédito desbloqueado']],
-      ['Esposa', ['RG/CNH', 'Passaporte/visto #internacional']],
+      ['Camila', ['RG/CNH', 'Passaporte/visto #internacional']],
       ['Aurora', ['Identidade', 'Certidão de nascimento', 'Passaporte #internacional']]
     ]},
     { nome: 'Mochila de bordo', cats: [
@@ -152,7 +152,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       ['Calçados', ['Tênis', 'Tênis de treino/corrida', 'Chinelo', 'Sapato #formal']],
       ['Acessórios', ['Cinto', 'Relógio', 'Case para relógio', 'Gravata #formal', 'Luva #frio', 'Cachecol #frio', 'Touca #frio']]
     ]},
-    { nome: 'Mala — Esposa', cats: [
+    { nome: 'Mala — Camila', cats: [
       ['Roupas', ['Pijama', 'Roupa íntima', 'Meia', 'Camiseta/blusa', 'Calça', 'Short/saia', 'Vestido', 'Casaco', 'Roupa de treino', 'Biquíni/maiô #praia', 'Saída de praia #praia', 'Roupa social #formal']],
       ['Calçados', ['Tênis', 'Chinelo', 'Sandália', 'Sapato #formal']],
       ['Acessórios', ['Óculos de sol', 'Bolsa', 'Bijuterias', 'Luva #frio', 'Cachecol #frio', 'Touca #frio']]
@@ -206,6 +206,8 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function $(id) { return document.getElementById(id); }
   function hoje() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  var MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  function dataCurta(iso) { var p = (iso || hoje()).split('-'); return (+p[2]) + ' ' + MESES[+p[1] - 1]; }
   function aplica(tagsItem, tagsViagem) {
     return !tagsItem || !tagsItem.length || tagsItem.some(function (t) { return tagsViagem.indexOf(t) > -1; });
   }
@@ -234,6 +236,14 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   if (!estado.modelo) estado.modelo = modeloPadrao();
   if (estado.viagem === undefined) estado.viagem = null;
   estado.abertos = estado.abertos || {};
+  // Migração: "Esposa" → "Camila" em listas já salvas no aparelho
+  [estado.modelo, estado.viagem].forEach(function (b) {
+    if (!b) return;
+    b.volumes.forEach(function (v) {
+      if (v.nome === 'Mala — Esposa') v.nome = 'Mala — Camila';
+      v.categorias.forEach(function (c) { if (c.nome === 'Esposa') c.nome = 'Camila'; });
+    });
+  });
   function salvar() { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} }
   salvar();
 
@@ -255,7 +265,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   });
 
   // ═════ Viagem ═════
-  function criarViagem(nome, tags) {
+  function criarViagem(tags) {
     var vols = [];
     estado.modelo.volumes.forEach(function (v) {
       if (!aplica(v.tags, tags)) return;
@@ -267,7 +277,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       });
       if (cats.length) vols.push({ id: novoId(), nome: v.nome, categorias: cats });
     });
-    estado.viagem = { nome: nome, tags: tags, criada: hoje(), volumes: vols };
+    estado.viagem = { tags: tags, criada: hoje(), volumes: vols };
     estado.abertos = {};
     salvar();
   }
@@ -298,7 +308,6 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       el.innerHTML =
         '<div class="card"><h2>Nova viagem</h2>' +
         '<p class="dica" style="margin-top:.25rem">A lista é montada a partir das listas-modelo. Marque o tipo de viagem para trazer só o que se aplica.</p>' +
-        '<label for="nv-nome">Nome</label><input class="campo" id="nv-nome" placeholder="Ex.: Praia em janeiro" autocomplete="off">' +
         '<label>Tipo de viagem</label><div class="chips">' +
           TAGS.map(function (t) { return '<button type="button" class="chip" data-acao="tag-nova" data-tag="' + t.id + '" aria-pressed="' + (ui.tagsNova.indexOf(t.id) > -1) + '">' + t.nome + '</button>'; }).join('') +
         '</div>' +
@@ -309,7 +318,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     cadaItemViagem(function (i, c, v) { todos.push(i); if (i.saida) saida.push({ i: i, de: v.nome }); });
     var g = contar(todos), pct = g.total ? Math.round(g.ok / g.total * 100) : 0;
 
-    var h = '<div class="viagem-topo"><div><h2>' + esc(vg.nome) + '</h2>' +
+    var h = '<div class="viagem-topo"><div><h2>Viagem de ' + dataCurta(vg.criada) + '</h2>' +
       '<div class="tags">' + (vg.tags.length ? nomesTags(vg.tags).join(' · ') : 'Sem etiquetas') + '</div></div></div>' +
       '<div class="progresso"><div class="num"><span><b>' + g.ok + '</b> de ' + g.total + ' itens</span><span>' + pct + '%</span></div>' +
       '<div class="barra"><i style="width:' + pct + '%"></i></div></div>' +
@@ -468,8 +477,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         b.setAttribute('aria-pressed', String(k === -1));
         return; // não re-renderiza: preserva o nome digitado
       case 'criar':
-        var nome = ($('nv-nome').value || '').trim() || 'Viagem';
-        criarViagem(nome, ui.tagsNova.slice()); ui.tagsNova = [];
+        criarViagem(ui.tagsNova.slice()); ui.tagsNova = [];
         break;
       case 'marcar':
         var a = acharItemViagem(id); if (a) { a.item.ok = !a.item.ok; salvar(); }
