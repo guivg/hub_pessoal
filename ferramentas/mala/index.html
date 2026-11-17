@@ -176,7 +176,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       ['À mão', ['Paninho de boca']]
     ]},
     { nome: 'Necessaire — Aurora', cats: [
-      ['Troca de fralda', ['Fralda', 'Fralda de piscina #praia', 'Lenço umedecido', 'Talco', 'Maizena']],
+      ['Troca de fralda', ['Fralda', 'Fralda de piscina #praia', 'Lenço umedecido', 'Talco (revisar: risco de inalação) ?', 'Maizena ?']],
       ['Banho', ['Sabonete', 'Shampoo', 'Hidratante', 'Cotonete', 'Pente', 'Escova de cabelo', 'Pasta de dente']],
       ['Sol', ['Protetor solar']]
     ]},
@@ -200,6 +200,40 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     ]}
   ];
 
+  // Acréscimos (v2): entram na lista padrão e também em listas já salvas no
+  // aparelho, sem duplicar nem desfazer edições. [volume, categoria, item]
+  var ACRESCIMOS_V2 = [
+    ['Documentos', 'Família', 'Passagens e reservas'],
+    ['Mochila de bordo', 'Eletrônicos', 'Celulares !'],
+    ['Necessaire — adultos', 'Banho e cabelo', 'Condicionador'],
+    ['Mala — Aurora', 'Roupinhas', 'Pijama'],
+    ['Bolsa da Aurora', 'Alimentação', 'Babadores'],
+    ['Bolsa da Aurora', 'Alimentação', 'Potes para lanches'],
+    ['Bolsa da Aurora', 'Limpeza', 'Escova para limpeza de mamadeira'],
+    ['Bolsa da Aurora', 'Limpeza', 'Detergente para utensílios infantis'],
+    ['Bolsa da Aurora', 'Distração', 'Brinquedos pequenos para deslocamento'],
+    ['Bolsa da Aurora', 'À mão', 'Roupas extras para emergências'],
+    ['Necessaire — Aurora', 'Troca de fralda', 'Pomada para assaduras'],
+    ['Necessaire — Aurora', 'Troca de fralda', 'Trocador portátil'],
+    ['Necessaire — Aurora', 'Troca de fralda', 'Sacos para fraldas usadas'],
+    ['Farmacinha — Aurora', 'Uso diário', 'Medicamentos prescritos'],
+    ['Farmacinha — Aurora', 'Acessórios', 'Termômetro'],
+    ['Farmacinha — Aurora', 'Acessórios', 'Soro fisiológico'],
+    ['Farmacinha — Aurora', 'Acessórios', 'Receitas e orientações médicas'],
+    ['Equipamentos — Aurora', 'Passeio e sono', 'Lençol para berço'],
+    ['Equipamentos — Aurora', 'Passeio e sono', 'Protetor impermeável de colchão'],
+    ['Equipamentos — Aurora', 'Passeio e sono', 'Mosquiteiro ?'],
+    ['Equipamentos — Aurora', 'Passeio e sono', 'Luz noturna ?'],
+    ['Família — casa e lazer', 'Lazer', 'Garrafa de água'],
+    ['Família — casa e lazer', 'Organização', 'Sacos para roupa suja'],
+    ['Casa', 'Antes de sair', 'Geladeira conferida !'],
+    ['Casa', 'Antes de sair', 'Alimentos perecíveis organizados !'],
+    ['Casa', 'Antes de sair', 'Lixeiras esvaziadas !'],
+    ['Casa', 'Antes de sair', 'Janelas fechadas !'],
+    ['Casa', 'Antes de sair', 'Equipamentos desligados !'],
+    ['Casa', 'Antes de sair', 'Portas trancadas !']
+  ];
+
   // ═════ Utilidades ═════
   var seq = 0;
   function novoId() { return Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2, 5); }
@@ -216,15 +250,34 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   function modeloPadrao() {
     return { volumes: PADRAO.map(function (v) {
       return { id: novoId(), nome: v.nome, tags: v.tags || [], categorias: v.cats.map(function (c) {
-        return { id: novoId(), nome: c[0], itens: c[1].map(function (s) {
-          var tags = [], saida = false;
-          var nome = s.replace(/\s*#(\w+)/g, function (_, t) { tags.push(t); return ''; })
-                      .replace(/\s*!\s*$/, function () { saida = true; return ''; }).trim();
-          return { id: novoId(), nome: nome, tags: tags, saida: saida };
-        }) };
+        return { id: novoId(), nome: c[0], itens: c[1].map(lerItem) };
       }) };
     }) };
   }
+  // "Nome #etiqueta !" ou "?" — ! = Na saída, ? = opcional (começa como "Não vai")
+  function lerItem(s) {
+    var tags = [], saida = false, opcional = false;
+    var nome = s.replace(/\s*#(\w+)/g, function (_, t) { tags.push(t); return ''; })
+                .replace(/\s*([!?])\s*$/, function (_, m) { if (m === '!') saida = true; else opcional = true; return ''; }).trim();
+    return { id: novoId(), nome: nome, tags: tags, saida: saida, opcional: opcional };
+  }
+  function aplicarV2(modelo) {
+    ACRESCIMOS_V2.forEach(function (a) {
+      var item = lerItem(a[2]);
+      var v = modelo.volumes.filter(function (x) { return x.nome === a[0]; })[0];
+      if (!v) { v = { id: novoId(), nome: a[0], tags: [], categorias: [] }; modelo.volumes.push(v); }
+      var c = v.categorias.filter(function (x) { return x.nome === a[1]; })[0];
+      if (!c) { c = { id: novoId(), nome: a[1], itens: [] }; v.categorias.push(c); }
+      if (!c.itens.some(function (i) { return i.nome.toLowerCase() === item.nome.toLowerCase(); })) c.itens.push(item);
+    });
+    // Talco e maizena: viram opcionais (talco com alerta)
+    modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) {
+      if (v.nome === 'Necessaire — Aurora' && i.nome === 'Talco') { i.nome = 'Talco (revisar: risco de inalação)'; i.opcional = true; }
+      if (v.nome === 'Necessaire — Aurora' && i.nome === 'Maizena') i.opcional = true;
+    }); }); });
+    return modelo;
+  }
+  function modeloCompleto() { return aplicarV2(modeloPadrao()); }
 
   // ═════ Estado (só neste aparelho) ═════
   // modelo: { volumes: [{ id, nome, tags[], categorias: [{ id, nome, itens: [{ id, nome, tags[], saida }] }] }] }
@@ -233,7 +286,8 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   var estado;
   try { estado = JSON.parse(localStorage.getItem(CHAVE)); } catch (e) {}
   if (!estado || typeof estado !== 'object') estado = {};
-  if (!estado.modelo) estado.modelo = modeloPadrao();
+  if (!estado.modelo) { estado.modelo = modeloCompleto(); estado.versao = 2; }
+  if ((estado.versao || 1) < 2) { aplicarV2(estado.modelo); estado.versao = 2; }
   if (estado.viagem === undefined) estado.viagem = null;
   estado.abertos = estado.abertos || {};
   // Migração: "Esposa" → "Camila" em listas já salvas no aparelho
@@ -272,7 +326,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       var cats = [];
       v.categorias.forEach(function (c) {
         var itens = c.itens.filter(function (i) { return aplica(i.tags, tags); })
-          .map(function (i) { return { id: novoId(), nome: i.nome, saida: !!i.saida, ok: false, fora: false }; });
+          .map(function (i) { return { id: novoId(), nome: i.nome, saida: !!i.saida, ok: false, fora: !!i.opcional }; });
         if (itens.length) cats.push({ id: novoId(), nome: c.nome, itens: itens });
       });
       if (cats.length) vols.push({ id: novoId(), nome: v.nome, categorias: cats });
@@ -300,6 +354,10 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         '<span class="caixa" aria-hidden="true"></span><span class="txt">' + esc(i.nome) + (de ? '<span class="de">' + esc(de) + '</span>' : '') + '</span></button>' +
       '<button type="button" class="fora-btn" data-acao="fora" data-id="' + i.id + '">' + (i.fora ? 'Vai' : 'Não vai') + '</button></li>';
   }
+  function grupoSaida(titulo, lista, mostrarDe) {
+    if (!lista.length) return '';
+    return '<h3>' + titulo + '</h3><ul class="itens">' + lista.map(function (x) { return linhaItem(x.i, mostrarDe ? x.de : ''); }).join('') + '</ul>';
+  }
   function visivel(i) { return !(ui.soFalta && (i.ok || i.fora)); }
 
   function renderViagem() {
@@ -315,7 +373,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       return;
     }
     var vg = estado.viagem, todos = [], saida = [];
-    cadaItemViagem(function (i, c, v) { todos.push(i); if (i.saida) saida.push({ i: i, de: v.nome }); });
+    cadaItemViagem(function (i, c, v) { todos.push(i); if (i.saida) saida.push({ i: i, de: v.nome, casa: v.nome === 'Casa' }); });
     var g = contar(todos), pct = g.total ? Math.round(g.ok / g.total * 100) : 0;
 
     var h = '<div class="viagem-topo"><div><h2>Viagem de ' + dataCurta(vg.criada) + '</h2>' +
@@ -333,7 +391,8 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         h += '<div class="vol saida card" style="padding:.75rem 1rem;margin-bottom:.5rem">' +
           '<div class="vol-topo"><span class="vol-nome">Na saída</span><span class="vol-conta' + (cs.ok === cs.total ? ' completo' : '') + '">' + cs.ok + '/' + cs.total + '</span></div>' +
           '<p class="dica" style="margin:.125rem 0 .25rem">Última hora: confira na porta.</p>' +
-          '<ul class="itens">' + vis.map(function (x) { return linhaItem(x.i, x.de); }).join('') + '</ul></div>';
+          grupoSaida('Levar', vis.filter(function (x) { return !x.casa; }), true) +
+          grupoSaida('Casa', vis.filter(function (x) { return x.casa; }), false) + '</div>';
       }
     }
 
@@ -341,9 +400,11 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       var itensVol = [];
       v.categorias.forEach(function (c) { c.itens.forEach(function (i) { if (!i.saida) itensVol.push(i); }); });
       var cv = contar(itensVol);
+      if (!itensVol.length) return; // ex.: Casa, que vive só em "Na saída"
       var completo = cv.total > 0 && cv.ok === cv.total;
       if (ui.soFalta && completo) return;
-      var corpo = '';
+      var corpo = cv.total ? '<div class="vol-ferr"><button type="button" class="link" data-acao="marcar-vol" data-id="' + v.id + '">' +
+        (completo ? 'Desmarcar todos' : 'Marcar todos') + '</button></div>' : '';
       v.categorias.forEach(function (c) {
         var its = c.itens.filter(function (i) { return !i.saida && visivel(i); });
         // não-vão por último
@@ -392,7 +453,8 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     return '<li class="editor" data-editor="' + i.id + '">' +
       '<span class="rot">Nome</span><input class="campo" data-campo="nome" value="' + esc(i.nome) + '" autocomplete="off">' +
       '<span class="rot">Só em viagens com (vazio = sempre)</span>' + chipsTags(i.tags, 'tag-item', i.id) +
-      '<span class="rot">Última hora</span><div class="chips"><button type="button" class="chip" data-acao="saida-item" data-id="' + i.id + '" aria-pressed="' + !!i.saida + '">Vai em "Na saída"</button></div>' +
+      '<span class="rot">Opções</span><div class="chips"><button type="button" class="chip" data-acao="saida-item" data-id="' + i.id + '" aria-pressed="' + !!i.saida + '">Vai em "Na saída"</button>' +
+      '<button type="button" class="chip" data-acao="opcional-item" data-id="' + i.id + '" aria-pressed="' + !!i.opcional + '">Opcional</button></div>' +
       '<div class="acoes"><button type="button" class="botao cheio" data-acao="salvar-item" data-id="' + i.id + '">Pronto</button>' +
       '<button type="button" class="link perigo" data-acao="excluir-item" data-id="' + i.id + '">' + (ui.confirmar === 'item:' + i.id ? 'Confirmar exclusão?' : 'Excluir item') + '</button></div></li>';
   }
@@ -406,7 +468,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
 
   function renderModelo() {
     var el = $('tela-modelo');
-    var h = '<p class="dica" style="margin-bottom:1rem">Base de toda viagem nova. Toque num item para editar nome, etiquetas e "Na saída". Mudanças aqui valem a partir da próxima viagem criada.</p>';
+    var h = '<p class="dica" style="margin-bottom:1rem">Base de toda viagem nova. Toque num item para editar nome, etiquetas e opções. Mudanças aqui valem a partir da próxima viagem criada.</p>';
     estado.modelo.volumes.forEach(function (v) {
       var n = 0; v.categorias.forEach(function (c) { n += c.itens.length; });
       var corpo = '';
@@ -423,6 +485,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
           if (ui.editando === 'item:' + i.id) return editorItem(i);
           return '<li class="m-item"><button type="button" data-acao="editar" data-id="item:' + i.id + '">' + esc(i.nome) +
             (i.saida ? '<span class="etq saida">Na saída</span>' : '') +
+            (i.opcional ? '<span class="etq">Opcional</span>' : '') +
             nomesTags(i.tags || []).map(function (t) { return '<span class="etq">' + esc(t) + '</span>'; }).join('') +
             '</button></li>';
         }).join('') + '</ul>' +
@@ -466,7 +529,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     var acao = b.dataset.acao, id = b.dataset.id;
     var manterConfirmar = false;
     // Antes de re-renderizar um editor aberto, guarda o nome que está sendo digitado
-    if (/^(tag-item|saida-item)$/.test(acao)) { var dig = lerNome(id); if (dig) acharItemModelo(id).item.nome = dig; }
+    if (/^(tag-item|saida-item|opcional-item)$/.test(acao)) { var dig = lerNome(id); if (dig) acharItemModelo(id).item.nome = dig; }
     if (acao === 'tag-vol') { var dv = lerNome(id); if (dv) acharVol(id).nome = dv; }
 
     switch (acao) {
@@ -482,6 +545,12 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       case 'marcar':
         var a = acharItemViagem(id); if (a) { a.item.ok = !a.item.ok; salvar(); }
         break;
+      case 'marcar-vol':
+      // Marca (ou desmarca, se já está completo) os itens do volume que vão, fora "Na saída"
+        var mv = estado.viagem.volumes.filter(function (x) { return x.id === id; })[0], its = [];
+        mv.categorias.forEach(function (c) { c.itens.forEach(function (i) { if (!i.saida && !i.fora) its.push(i); }); });
+        var todosOk = its.every(function (i) { return i.ok; });
+        its.forEach(function (i) { i.ok = !todosOk; }); salvar(); break;
       case 'fora':
         var f = acharItemViagem(id); if (f) { f.item.fora = !f.item.fora; if (f.item.fora) f.item.ok = false; salvar(); }
         break;
@@ -503,6 +572,8 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         var ti = acharItemModelo(id).item; toggle(ti.tags, b.dataset.tag); salvar(); manterConfirmar = true; break;
       case 'tag-vol':
         var tv = acharVol(id); tv.tags = tv.tags || []; toggle(tv.tags, b.dataset.tag); salvar(); manterConfirmar = true; break;
+      case 'opcional-item':
+        var oi = acharItemModelo(id).item; oi.opcional = !oi.opcional; salvar(); manterConfirmar = true; break;
       case 'saida-item':
         var si = acharItemModelo(id).item; si.saida = !si.saida; salvar(); manterConfirmar = true; break;
       case 'salvar-item':
@@ -525,7 +596,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
         acharVol(id).categorias.push(cat); salvar(); ui.editando = 'cat:' + cat.id; break;
       case 'restaurar':
         if (ui.confirmar !== 'restaurar') { ui.confirmar = 'restaurar'; manterConfirmar = true; break; }
-        estado.modelo = modeloPadrao(); salvar(); ui.editando = null; ui.aviso = 'Listas originais restauradas.'; break;
+        estado.modelo = modeloCompleto(); salvar(); ui.editando = null; ui.aviso = 'Listas originais restauradas.'; break;
       default: return;
     }
     if (!manterConfirmar) ui.confirmar = null;
