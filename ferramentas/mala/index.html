@@ -312,7 +312,77 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     });
     return modelo;
   }
-  function modeloCompleto() { return aplicarLista(aplicarV2(modeloPadrao()), ACRESCIMOS_V3); }
+  // Reorganização (v4): necessaires separadas pelo uso.
+  // [volume de origem, item, volume de destino, categoria de destino, novo nome (opcional)]
+  var MUDANCAS_V4 = [
+    ['Necessaire — adultos', 'Shampoo', 'Banho — adultos', 'Cabelo'],
+    ['Necessaire — adultos', 'Condicionador', 'Banho — adultos', 'Cabelo'],
+    ['Necessaire — adultos', 'Sabonete', 'Banho — adultos', 'Corpo e rosto'],
+    ['Necessaire — adultos', 'Sabonete de rosto', 'Banho — adultos', 'Corpo e rosto'],
+    ['Necessaire — adultos', 'Pasta de dente', 'Higiene diária — adultos', 'Dentes'],
+    ['Necessaire — adultos', 'Escova de dente', 'Higiene diária — adultos', 'Dentes'],
+    ['Necessaire — adultos', 'Fio dental', 'Higiene diária — adultos', 'Dentes'],
+    ['Necessaire — adultos', 'Enxaguante bucal', 'Higiene diária — adultos', 'Dentes'],
+    ['Necessaire — adultos', 'Desodorante', 'Higiene diária — adultos', 'Corpo'],
+    ['Necessaire — adultos', 'Perfume', 'Higiene diária — adultos', 'Corpo'],
+    ['Necessaire — adultos', 'Hidratante', 'Higiene diária — adultos', 'Corpo'],
+    ['Necessaire — adultos', 'Escova de cabelo', 'Higiene diária — adultos', 'Cabelo'],
+    ['Necessaire — adultos', 'Cotonete', 'Higiene diária — adultos', 'Cuidados'],
+    ['Necessaire — adultos', 'Utensílios para cortar unha', 'Higiene diária — adultos', 'Cuidados'],
+    ['Necessaire — adultos', 'Soro fisiológico', 'Higiene diária — adultos', 'Cuidados'],
+    ['Necessaire — adultos', 'Protetor solar', 'Sol — família', 'Adultos'],
+    ['Necessaire — adultos', 'Protetor solar facial', 'Sol — família', 'Adultos'],
+    ['Necessaire — adultos', 'Protetor labial', 'Sol — família', 'Adultos'],
+    ['Necessaire — Aurora', 'Fralda', 'Kit troca — Aurora', 'Troca'],
+    ['Necessaire — Aurora', 'Fralda de piscina', 'Kit troca — Aurora', 'Troca'],
+    ['Necessaire — Aurora', 'Lenço umedecido', 'Kit troca — Aurora', 'Troca'],
+    ['Necessaire — Aurora', 'Pomada para assaduras', 'Kit troca — Aurora', 'Troca'],
+    ['Necessaire — Aurora', 'Trocador portátil', 'Kit troca — Aurora', 'Troca'],
+    ['Necessaire — Aurora', 'Sacos para fraldas usadas', 'Kit troca — Aurora', 'Troca'],
+    ['Necessaire — Aurora', 'Talco (revisar: risco de inalação)', 'Kit troca — Aurora', 'Troca'],
+    ['Necessaire — Aurora', 'Maizena', 'Kit troca — Aurora', 'Troca'],
+    ['Necessaire — Aurora', 'Sabonete', 'Banho e higiene — Aurora', 'Banho'],
+    ['Necessaire — Aurora', 'Shampoo', 'Banho e higiene — Aurora', 'Banho'],
+    ['Necessaire — Aurora', 'Hidratante', 'Banho e higiene — Aurora', 'Banho'],
+    ['Necessaire — Aurora', 'Pasta de dente', 'Banho e higiene — Aurora', 'Cuidados'],
+    ['Necessaire — Aurora', 'Cotonete', 'Banho e higiene — Aurora', 'Cuidados'],
+    ['Necessaire — Aurora', 'Pente', 'Banho e higiene — Aurora', 'Cuidados'],
+    ['Necessaire — Aurora', 'Escova de cabelo', 'Banho e higiene — Aurora', 'Cuidados'],
+    ['Necessaire — Aurora', 'Protetor solar', 'Sol — família', 'Aurora', 'Protetor solar infantil']
+  ];
+  var ACRESCIMOS_V4 = [['Banho e higiene — Aurora', 'Cuidados', 'Escova de dente']];
+  function pegaCat(modelo, nomeVol, nomeCat) {
+    var v = modelo.volumes.filter(function (x) { return x.nome === nomeVol; })[0];
+    if (!v) { v = { id: novoId(), nome: nomeVol, tags: [], categorias: [] }; modelo.volumes.push(v); }
+    var c = v.categorias.filter(function (x) { return x.nome === nomeCat; })[0];
+    if (!c) { c = { id: novoId(), nome: nomeCat, itens: [] }; v.categorias.push(c); }
+    return c;
+  }
+  function aplicarV4(modelo) {
+    var origens = {};
+    MUDANCAS_V4.forEach(function (m) {
+      var v = modelo.volumes.filter(function (x) { return x.nome === m[0]; })[0];
+      if (!v) return;
+      origens[m[0]] = v;
+      v.categorias.forEach(function (c) {
+        var k = -1;
+        c.itens.forEach(function (i, n) { if (k < 0 && i.nome.toLowerCase() === m[1].toLowerCase()) k = n; });
+        if (k < 0) return;
+        var item = c.itens.splice(k, 1)[0];
+        if (m[4]) item.nome = m[4];
+        var destino = pegaCat(modelo, m[2], m[3]);
+        if (!destino.itens.some(function (i) { return i.nome.toLowerCase() === item.nome.toLowerCase(); })) destino.itens.push(item);
+      });
+    });
+    // Necessaires antigas: tira categorias vazias; some com o volume se ficou vazio
+    Object.keys(origens).forEach(function (nome) {
+      var v = origens[nome];
+      v.categorias = v.categorias.filter(function (c) { return c.itens.length; });
+      if (!v.categorias.length) modelo.volumes.splice(modelo.volumes.indexOf(v), 1);
+    });
+    return aplicarLista(modelo, ACRESCIMOS_V4);
+  }
+  function modeloCompleto() { return aplicarV4(aplicarLista(aplicarV2(modeloPadrao()), ACRESCIMOS_V3)); }
 
   // ═════ Estado (só neste aparelho) ═════
   // modelo: { volumes: [{ id, nome, tags[], categorias: [{ id, nome, itens: [{ id, nome, tags[], saida }] }] }] }
@@ -321,9 +391,10 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   var estado;
   try { estado = JSON.parse(localStorage.getItem(CHAVE)); } catch (e) {}
   if (!estado || typeof estado !== 'object') estado = {};
-  if (!estado.modelo) { estado.modelo = modeloCompleto(); estado.versao = 3; }
+  if (!estado.modelo) { estado.modelo = modeloCompleto(); estado.versao = 4; }
   if ((estado.versao || 1) < 2) { aplicarV2(estado.modelo); estado.versao = 2; }
   if (estado.versao < 3) { aplicarLista(estado.modelo, ACRESCIMOS_V3); estado.versao = 3; }
+  if (estado.versao < 4) { aplicarV4(estado.modelo); estado.versao = 4; }
   estado.modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { c.itens.forEach(function (i) { delete i.opcional; }); }); });
   // Uma vez só: itens que entraram como "Não vai" pela antiga regra de opcional voltam a "vai"
   if (!estado.semOpcional) {
