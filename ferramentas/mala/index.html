@@ -33,6 +33,9 @@ h3:first-child{margin-top:.25rem}
 .chips{display:flex;flex-wrap:wrap;gap:.375rem}
 .chip{border:1px solid var(--linha);background:var(--papel);padding:.3125rem .75rem;border-radius:999px;font-size:.8125rem;min-height:2rem}
 .chip[aria-pressed="true"]{background:var(--folha);border-color:var(--folha);color:var(--folha-tinta);font-weight:500}
+.grupo-tag{margin-top:.75rem}
+.grupo-tag:first-of-type{margin-top:.5rem}
+.grupo-nome{display:block;font-size:.75rem;font-weight:500;color:var(--suave);margin-bottom:.3125rem}
 .etq{display:inline-block;font-size:.6875rem;font-weight:600;color:var(--suave);border:1px solid var(--linha);border-radius:999px;padding:0 .4375rem;margin-left:.25rem;vertical-align:1px;white-space:nowrap}
 .etq.saida{color:var(--alerta);border-color:currentColor}
 
@@ -122,14 +125,17 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
   'use strict';
 
   // ═════ Configuração ═════
+  // Tipos de viagem, agrupados em subcategorias (ordem de exibição)
   var TAGS = [
-    { id: 'praia', nome: 'Praia/piscina' },
-    { id: 'frio', nome: 'Frio' },
-    { id: 'formal', nome: 'Formal' },
-    { id: 'internacional', nome: 'Internacional' },
-    { id: 'aviao', nome: 'Avião' },
-    { id: 'carro', nome: 'Carro' }
+    { id: 'praia', nome: 'Praia/piscina', grupo: 'Destino' },
+    { id: 'frio', nome: 'Frio', grupo: 'Destino' },
+    { id: 'internacional', nome: 'Internacional', grupo: 'Destino' },
+    { id: 'aviao', nome: 'Avião', grupo: 'Transporte' },
+    { id: 'carro', nome: 'Carro', grupo: 'Transporte' },
+    { id: 'formal', nome: 'Formal', grupo: 'Ocasião' }
   ];
+  var GRUPOS = [];
+  TAGS.forEach(function (t) { if (GRUPOS.indexOf(t.grupo) < 0) GRUPOS.push(t.grupo); });
   var NOME_TAG = {};
   TAGS.forEach(function (t) { NOME_TAG[t.id] = t.nome; });
 
@@ -366,9 +372,7 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
       el.innerHTML =
         '<div class="card"><h2>Nova viagem</h2>' +
         '<p class="dica" style="margin-top:.25rem">A lista é montada a partir das listas-modelo. Marque o tipo de viagem para trazer só o que se aplica.</p>' +
-        '<label>Tipo de viagem</label><div class="chips">' +
-          TAGS.map(function (t) { return '<button type="button" class="chip" data-acao="tag-nova" data-tag="' + t.id + '" aria-pressed="' + (ui.tagsNova.indexOf(t.id) > -1) + '">' + t.nome + '</button>'; }).join('') +
-        '</div>' +
+        chipsTags(ui.tagsNova, 'tag-nova', '') +
         '<button type="button" class="botao cheio" data-acao="criar">Criar lista</button></div>';
       return;
     }
@@ -444,10 +448,14 @@ details[open] .vol-nome::before{transform:rotate(90deg)}
     estado.modelo.volumes.forEach(function (v) { v.categorias.forEach(function (c) { if (c.id === id) r = { cat: c, vol: v }; }); });
     return r;
   }
+  // Botões de etiqueta agrupados por subcategoria (Destino, Transporte, Ocasião)
   function chipsTags(sel, acao, id) {
-    return '<div class="chips">' + TAGS.map(function (t) {
-      return '<button type="button" class="chip" data-acao="' + acao + '" data-id="' + id + '" data-tag="' + t.id + '" aria-pressed="' + (sel.indexOf(t.id) > -1) + '">' + t.nome + '</button>';
-    }).join('') + '</div>';
+    return GRUPOS.map(function (g) {
+      return '<div class="grupo-tag"><span class="grupo-nome">' + g + '</span><div class="chips">' +
+        TAGS.filter(function (t) { return t.grupo === g; }).map(function (t) {
+          return '<button type="button" class="chip" data-acao="' + acao + '" data-id="' + id + '" data-tag="' + t.id + '" aria-pressed="' + (sel.indexOf(t.id) > -1) + '">' + t.nome + '</button>';
+        }).join('') + '</div></div>';
+    }).join('');
   }
   function editorItem(i) {
     return '<li class="editor" data-editor="' + i.id + '">' +
