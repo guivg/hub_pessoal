@@ -1,0 +1,70 @@
+/* ─────────────────────────────────────────────────────────────
+   Hub pessoal — tema grafite/neutro compartilhado por todas as ferramentas.
+   Uso:  <link rel="stylesheet" href="../../compartilhado/tema.css">
+   (do index do hub:  href="compartilhado/tema.css")
+
+   Tokens
+     --fundo        fundo da página
+     --papel        superfícies (cards, campos, barras)
+     --tinta        texto principal
+     --suave        texto secundário, rótulos
+     --linha        bordas e divisores
+     --folha        destaque (grafite); --folha-tinta é o texto sobre ele
+     --folha-clara  destaque bem leve (fundos de seleção)
+     --positivo / --alerta / --perigo   só para semântica (ganho, atenção, erro)
+     --fonte        família tipográfica
+   ───────────────────────────────────────────────────────────── */
+:root{
+  color-scheme:light dark;
+  --fundo:#F4F4F2;
+  --papel:#FCFCFB;
+  --tinta:#1A1A1A;
+  --suave:#70706D;
+  --linha:#DDDDDA;
+  --folha:#2B2B2A;
+  --folha-tinta:#FFFFFF;
+  --folha-clara:#E8E8E5;
+  --positivo:#2E7148;
+  --alerta:#8A6100;
+  --perigo:#8C3B30;
+  --fonte:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --largura:40rem;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --fundo:#151515; --papel:#1D1D1D; --tinta:#ECECEA; --suave:#989895;
+    --linha:#303030; --folha:#E2E2DF; --folha-tinta:#151515; --folha-clara:#2A2A2A;
+    --positivo:#7CC495; --alerta:#D8B45E; --perigo:#D9968B;
+  }
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--fundo);color:var(--tinta);
+  font:400 .9375rem/1.5 var(--fonte);
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
+  -webkit-tap-highlight-color:transparent;
+}
+button,input,textarea,select{font:inherit;color:inherit}
+input,textarea,select{font-size:1rem} /* evita zoom automático no iPhone */
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--folha);outline-offset:2px}
+
+.pagina{max-width:var(--largura);margin:0 auto;padding:1.5rem 1.125rem 6rem}
+
+/* Cabeçalho padrão das ferramentas: "← Hub" + título com ícone */
+.topo{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:0 0 1rem}
+.topo h1{display:flex;align-items:center;gap:.625rem;font:600 1.375rem/1.2 var(--fonte);letter-spacing:-.01em;margin:0}
+.topo h1 svg{width:2rem;height:2rem;flex:none}
+.voltar{
+  display:inline-flex;align-items:center;gap:.25rem;
+  color:var(--suave);text-decoration:none;font-size:.875rem;font-weight:500;
+  padding:.375rem .625rem;margin-right:-.625rem;border-radius:.5rem;
+}
+.voltar:hover{color:var(--tinta);background:var(--folha-clara)}
+
+/* Abas padrão */
+.nav{display:flex;gap:1.5rem;border-bottom:1px solid var(--linha);margin-bottom:1.75rem;overflow-x:auto}
+.nav button{border:0;background:none;padding:.5rem 0 .625rem;margin-bottom:-1px;border-bottom:2px solid transparent;color:var(--suave);font-weight:500;white-space:nowrap}
+.nav button[aria-current="page"]{color:var(--tinta);border-bottom-color:var(--folha);font-weight:600}

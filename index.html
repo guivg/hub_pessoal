@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Hub pessoal</title>
+<link rel="icon" type="image/png" href="icone-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Hub">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F4F4F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151515" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="compartilhado/tema.css">
+<style>
+.saudacao{color:var(--suave);margin:-.5rem 0 1.75rem}
+.ferramentas{list-style:none;margin:0;padding:0;display:grid;gap:.625rem}
+.ferramenta{
+  display:flex;align-items:center;gap:.875rem;
+  background:var(--papel);border:1px solid var(--linha);border-radius:.75rem;
+  padding:.875rem 1rem;color:inherit;text-decoration:none;
+}
+.ferramenta:hover{border-color:var(--suave)}
+.ferramenta:active{background:var(--folha-clara)}
+.ferramenta svg{width:2.5rem;height:2.5rem;flex:none}
+.ferramenta .nome{display:block;font-weight:600}
+.ferramenta .desc{display:block;color:var(--suave);font-size:.875rem;line-height:1.35}
+.ferramenta .seta{margin-left:auto;color:var(--suave);flex:none}
+.backup{margin-top:2.5rem;border-top:1px solid var(--linha);padding-top:1.25rem}
+.backup h2{font:600 .9375rem/1.3 var(--fonte);margin:0 0 .25rem}
+.dica{color:var(--suave);font-size:.8125rem;margin:0 0 .75rem}
+.acoes{display:flex;flex-wrap:wrap;gap:.5rem}
+.botao{border:1px solid var(--linha);background:var(--papel);padding:.5rem 1rem;border-radius:.5rem;font-weight:600;font-size:.875rem}
+.botao.cheio{background:var(--folha);border-color:var(--folha);color:var(--folha-tinta)}
+.botao[hidden],#restaurar[hidden]{display:none}
+#restaurar textarea{width:100%;min-height:6rem;margin:.75rem 0 .5rem;resize:vertical;background:var(--papel);border:1px solid var(--linha);border-radius:.5rem;padding:.5rem .75rem;font:400 .8125rem/1.4 ui-monospace,Menlo,monospace}
+.aviso{min-height:1.375rem;margin:.625rem 0 0;font-size:.875rem}
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header class="topo">
+    <h1><svg viewBox="12 12 76 76" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="4.5"/><rect x="32" y="32" width="15" height="15" rx="3.5" fill="currentColor"/><rect x="53" y="32" width="15" height="15" rx="3.5" fill="currentColor" opacity=".35"/><rect x="32" y="53" width="15" height="15" rx="3.5" fill="currentColor" opacity=".35"/><rect x="53" y="53" width="15" height="15" rx="3.5" fill="currentColor" opacity=".35"/></svg>Hub pessoal</h1>
+  </header>
+  <p class="saudacao" id="saudacao"></p>
+
+  <ul class="ferramentas" id="ferramentas"></ul>
+
+  <section class="backup" aria-labelledby="t-backup">
+    <h2 id="t-backup">Backup dos dados</h2>
+    <p class="dica">Os dados de cada ferramenta ficam só neste aparelho. Copie o backup para guardar ou levar para outro aparelho, e cole aqui para restaurar.</p>
+    <div class="acoes">
+      <button type="button" class="botao" id="copiar">Copiar backup</button>
+      <button type="button" class="botao" id="abrir-restaurar">Restaurar backup</button>
+    </div>
+    <div id="restaurar" hidden>
+      <textarea id="texto-backup" placeholder="Cole aqui o backup copiado" spellcheck="false" autocomplete="off"></textarea>
+      <div class="acoes">
+        <button type="button" class="botao cheio" id="confirmar">Substituir dados por este backup</button>
+        <button type="button" class="botao" id="cancelar">Cancelar</button>
+      </div>
+    </div>
+    <p class="aviso" id="aviso" role="status"></p>
+  </section>
+</div>
+
+<script>
+// ── Registro de ferramentas ──
+// Para adicionar uma nova: crie ferramentas/<pasta>/index.html e acrescente
+// uma linha aqui. O ícone é o conteúdo interno de um SVG com viewBox 12 12 76 76
+// (anel externo é desenhado automaticamente; use currentColor).
+// "chaves" são as chaves de localStorage da ferramenta — entram no backup.
+var FERRAMENTAS = [
+  {
+    pasta: 'menu', nome: 'Meu menu', chaves: ['meu-menu-v3', 'cozinha_estado_v4'], desc: 'Montar o cardápio e a lista da semana',
+    icone: '<path d="M27 47 A23 23 0 0 1 73 47 Z" fill="currentColor"/><path d="M27 53 L47 53 L47 73 A23 23 0 0 1 27 53 Z M53 53 L73 53 A23 23 0 0 1 53 73 Z" fill="currentColor" opacity=".35"/>'
+  },
+  {
+    pasta: 'investimentos', nome: 'Investimentos', chaves: ['meus-investimentos:v1'], desc: 'Rebalanceamento, patrimônio e aportes em BTC',
+    icone: '<rect x="32" y="52" width="9" height="15" rx="2" fill="currentColor" opacity=".35"/><rect x="45.5" y="43" width="9" height="24" rx="2" fill="currentColor" opacity=".35"/><rect x="59" y="33" width="9" height="34" rx="2" fill="currentColor"/>'
+  }
+];
+
+(function () {
+  var lista = document.getElementById('ferramentas');
+  FERRAMENTAS.forEach(function (f) {
+    var li = document.createElement('li');
+    li.innerHTML =
+      '<a class="ferramenta" href="ferramentas/' + f.pasta + '/">' +
+        '<svg viewBox="12 12 76 76" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="4.5"/>' + f.icone + '</svg>' +
+        '<span><span class="nome"></span><span class="desc"></span></span>' +
+        '<span class="seta" aria-hidden="true">&rarr;</span>' +
+      '</a>';
+    li.querySelector('.nome').textContent = f.nome;
+    li.querySelector('.desc').textContent = f.desc;
+    lista.appendChild(li);
+  });
+
+  var h = new Date().getHours();
+  document.getElementById('saudacao').textContent =
+    (h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite') + '.';
+})();
+
+// ── Backup: todas as chaves registradas, num JSON só ──
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var chaves = [];
+  FERRAMENTAS.forEach(function (f) { chaves = chaves.concat(f.chaves || []); });
+  function avisar(t) { $('aviso').textContent = t; }
+
+  function gerar() {
+    var dados = {};
+    chaves.forEach(function (k) {
+      try { var v = localStorage.getItem(k); if (v !== null) dados[k] = v; } catch (e) {}
+    });
+    return JSON.stringify({ hub: 1, data: new Date().toISOString(), dados: dados });
+  }
+  function copiar(texto) {
+    var ok = function () { avisar('Backup copiado. Guarde em um lugar seguro (ex.: Notas).'); };
+    var reserva = function () {
+      $('restaurar').hidden = false; $('texto-backup').value = texto; $('texto-backup').select();
+      $('confirmar').hidden = true;
+      avisar('Não deu para copiar automaticamente — selecione o texto acima e copie.');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok, reserva);
+    else reserva();
+  }
+  $('copiar').addEventListener('click', function () {
+    var t = gerar();
+    if (!Object.keys(JSON.parse(t).dados).length) { avisar('Ainda não há dados neste aparelho.'); return; }
+    copiar(t);
+  });
+  $('abrir-restaurar').addEventListener('click', function () {
+    $('restaurar').hidden = false; $('confirmar').hidden = false; $('texto-backup').value = ''; $('texto-backup').focus(); avisar('');
+  });
+  $('cancelar').addEventListener('click', function () { $('restaurar').hidden = true; avisar(''); });
+  $('confirmar').addEventListener('click', function () {
+    var b;
+    try { b = JSON.parse($('texto-backup').value.trim()); } catch (e) { avisar('Esse texto não é um backup válido.'); return; }
+    if (!b || typeof b.dados !== 'object') { avisar('Esse texto não é um backup válido.'); return; }
+    var n = 0;
+    Object.keys(b.dados).forEach(function (k) {
+      if (chaves.indexOf(k) > -1 && typeof b.dados[k] === 'string') {
+        try { localStorage.setItem(k, b.dados[k]); n++; } catch (e) {}
+      }
+    });
+    $('restaurar').hidden = true;
+    avisar(n ? 'Backup restaurado (' + n + (n === 1 ? ' item' : ' itens') + ').' : 'Nenhum dado reconhecido nesse backup.');
+  });
+})();
+</script>
+</body>
+</html>
